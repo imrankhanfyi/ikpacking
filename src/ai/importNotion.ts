@@ -1,4 +1,4 @@
-import { MasterItem } from '../types'
+import type { MasterItem } from '../types'
 import { openRouterChat } from './client'
 
 const SYSTEM_PROMPT = `Parse a Notion packing list (markdown checkbox format) into a JSON array of items.

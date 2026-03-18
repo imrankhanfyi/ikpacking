@@ -1,4 +1,4 @@
-import { MasterItem } from '../types'
+import type { MasterItem } from '../types'
 
 const PER_DAY_CAP = 14
 

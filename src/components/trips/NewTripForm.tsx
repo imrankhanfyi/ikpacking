@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TripProfile, Weather, TripType, TripMode } from '../../types'
+import type { TripProfile } from '../../types'
 import { useStore } from '../../store'
 import { generateTripItems } from '../../lib/generateTripItems'
 import { parseTripDescription } from '../../ai/parseTrip'

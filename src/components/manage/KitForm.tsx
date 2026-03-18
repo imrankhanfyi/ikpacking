@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../../store'
-import { Kit, KitItem } from '../../types'
+import type { Kit, KitItem } from '../../types'
 import { Modal } from '../common/Modal'
 
 export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void }) {

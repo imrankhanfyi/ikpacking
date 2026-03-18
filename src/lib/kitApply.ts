@@ -1,4 +1,4 @@
-import { TripItem, Kit } from '../types'
+import type { TripItem, Kit } from '../types'
 import { v4 as uuid } from 'uuid'
 
 export function applyKits(baseItems: TripItem[], allKits: Kit[], activeKitIds: string[]): TripItem[] {

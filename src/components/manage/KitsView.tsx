@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../../store'
-import { Kit } from '../../types'
+import type { Kit } from '../../types'
 import { KitForm } from './KitForm'
 
 export function KitsView() {

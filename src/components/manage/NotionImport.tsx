@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../store'
-import { importNotionList, ImportedItem } from '../../ai/importNotion'
+import { importNotionList } from '../../ai/importNotion'
+import type { ImportedItem } from '../../ai/importNotion'
 
 export function NotionImport() {
   const [markdown, setMarkdown] = useState('')

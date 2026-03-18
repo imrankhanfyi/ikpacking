@@ -1,7 +1,7 @@
 // src/store/index.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { MasterItem, Kit, Trip, TripItem, AppSettings, PatternSuggestion } from '../types'
+import type { MasterItem, Kit, Trip, TripItem, AppSettings, PatternSuggestion } from '../types'
 import { seedItems, buildSeedKits } from './seed'
 import { v4 as uuid } from 'uuid'
 

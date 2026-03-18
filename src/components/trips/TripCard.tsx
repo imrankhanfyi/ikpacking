@@ -1,4 +1,4 @@
-import { Trip } from '../../types'
+import type { Trip } from '../../types'
 import { ProgressBar } from '../common/ProgressBar'
 import { Link } from 'react-router-dom'
 

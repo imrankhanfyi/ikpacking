@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../../store'
-import { MasterItem } from '../../types'
+import type { MasterItem } from '../../types'
 import { TagChip } from '../common/TagChip'
 import { ItemForm } from './ItemForm'
 

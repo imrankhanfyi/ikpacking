@@ -1,4 +1,4 @@
-import { TripItem } from '../../types'
+import type { TripItem } from '../../types'
 import { useStore } from '../../store'
 
 interface Props { items: TripItem[]; onToggle: (id: string) => void; tripId: string }

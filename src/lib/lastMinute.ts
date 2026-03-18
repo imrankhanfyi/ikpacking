@@ -1,4 +1,4 @@
-import { TripItem } from '../types'
+import type { TripItem } from '../types'
 
 export function computeLastMinuteItems(items: TripItem[], departureDate: string): TripItem[] {
   const today = new Date().toISOString().split('T')[0]

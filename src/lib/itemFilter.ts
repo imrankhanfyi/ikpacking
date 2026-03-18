@@ -1,4 +1,4 @@
-import { MasterItem, TripProfile } from '../types'
+import type { MasterItem, TripProfile } from '../types'
 
 const WEATHER_TAGS: Record<string, string[]> = {
   cold: ['cold-weather'],

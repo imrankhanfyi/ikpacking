@@ -1,4 +1,4 @@
-import { TripItem } from '../../types'
+import type { TripItem } from '../../types'
 import { QtyBadge } from '../common/QtyBadge'
 
 interface Props {

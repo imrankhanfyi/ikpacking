@@ -1,4 +1,4 @@
-import { MasterItem, TripItem, TripProfile } from '../types'
+import type { MasterItem, TripItem, TripProfile } from '../types'
 import { filterItemsByProfile } from './itemFilter'
 import { computeQty } from './quantities'
 import { v4 as uuid } from 'uuid'

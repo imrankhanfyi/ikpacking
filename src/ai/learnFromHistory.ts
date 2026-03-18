@@ -1,4 +1,4 @@
-import { Trip, PatternSuggestion } from '../types'
+import type { Trip, PatternSuggestion } from '../types'
 import { openRouterChat } from './client'
 
 const SYSTEM_PROMPT = `You analyse packing trip history and identify actionable patterns.

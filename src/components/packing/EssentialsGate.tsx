@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TripItem } from '../../types'
+import type { TripItem } from '../../types'
 import { Modal } from '../common/Modal'
 
 interface Props { items: TripItem[]; onConfirm: () => void; onClose: () => void }

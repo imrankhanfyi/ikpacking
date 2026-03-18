@@ -1,4 +1,4 @@
-import { TripProfile } from '../types'
+import type { TripProfile } from '../types'
 import { openRouterChat } from './client'
 
 const SYSTEM_PROMPT = `You parse trip descriptions into structured JSON.

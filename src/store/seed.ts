@@ -1,5 +1,5 @@
 // src/store/seed.ts
-import { MasterItem, Kit } from '../types'
+import type { MasterItem, Kit } from '../types'
 import { v4 as uuid } from 'uuid'
 
 export const seedItems: MasterItem[] = [
