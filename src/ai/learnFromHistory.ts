@@ -20,7 +20,7 @@ export async function learnFromHistory(apiKey: string, completedTrips: Trip[]): 
     skipped: t.items.filter(i => !i.isIncluded || (!i.isPacked && i.isIncluded)).map(i => i.name),
   }))
 
-  const raw = await openRouterChat(apiKey, 'anthropic/claude-sonnet-4-5', [
+  const raw = await openRouterChat(apiKey, 'anthropic/claude-haiku-4-5', [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: JSON.stringify(summary) },
   ])

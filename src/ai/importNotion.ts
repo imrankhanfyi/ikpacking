@@ -19,7 +19,7 @@ export interface ImportedItem extends Omit<MasterItem, 'id'> {
 }
 
 export async function importNotionList(apiKey: string, markdown: string): Promise<ImportedItem[]> {
-  const raw = await openRouterChat(apiKey, 'anthropic/claude-sonnet-4-5', [
+  const raw = await openRouterChat(apiKey, 'anthropic/claude-haiku-4-5', [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: markdown },
   ])

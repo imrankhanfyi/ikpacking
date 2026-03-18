@@ -14,7 +14,7 @@ Infer from context. "Edinburgh in October" → cold. "work dinner" → business.
 export async function parseTripDescription(apiKey: string, description: string): Promise<TripProfile & { name: string }> {
   const raw = await openRouterChat(
     apiKey,
-    'anthropic/claude-sonnet-4-5',
+    'anthropic/claude-haiku-4-5',
     [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: description },
