@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { TripProfile, Weather, TripType, TripMode } from '../../types'
 import { useStore } from '../../store'
 import { generateTripItems } from '../../lib/generateTripItems'
+import { parseTripDescription } from '../../ai/parseTrip'
 
 const DEFAULT_PROFILE: TripProfile = {
   duration: 5, weather: 'cold', type: 'leisure', mode: 'checked', nlDescription: ''
@@ -17,9 +18,28 @@ export function NewTripForm() {
   const kits = useStore(s => s.kits)
   const addTrip = useStore(s => s.addTrip)
   const navigate = useNavigate()
+  const settings = useStore(s => s.settings)
+  const [nlInput, setNlInput] = useState('')
+  const [nlLoading, setNlLoading] = useState(false)
 
   const [generatedItems, setGeneratedItems] = useState(() => generateTripItems(masterItems, DEFAULT_PROFILE))
   const [activeKitIds, setActiveKitIds] = useState<string[]>([])
+
+  async function handleNlSubmit() {
+    if (!nlInput.trim() || !settings.openRouterApiKey) return
+    setNlLoading(true)
+    try {
+      const parsed = await parseTripDescription(settings.openRouterApiKey, nlInput)
+      setProfile({ duration: parsed.duration, weather: parsed.weather, type: parsed.type, mode: parsed.mode, nlDescription: nlInput })
+      setName(parsed.name)
+      setGeneratedItems(generateTripItems(masterItems, parsed))
+      setStep('kits')
+    } catch (e) {
+      alert('AI parsing failed — fill in manually below.')
+    } finally {
+      setNlLoading(false)
+    }
+  }
 
   function handleGenerate() {
     setGeneratedItems(generateTripItems(masterItems, profile))
@@ -82,6 +102,23 @@ export function NewTripForm() {
   return (
     <div className="max-w-lg mx-auto p-6 space-y-4">
       <h2 className="text-xl font-bold text-slate-100">New trip</h2>
+
+      {settings.openRouterApiKey && (
+        <div>
+          <label className="text-xs text-slate-400 uppercase tracking-wider">Describe your trip</label>
+          <textarea
+            value={nlInput}
+            onChange={e => setNlInput(e.target.value)}
+            placeholder="5 days in Edinburgh, cold, one work dinner, carry-on..."
+            rows={2}
+            className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 resize-none"
+          />
+          <button onClick={handleNlSubmit} disabled={nlLoading || !nlInput.trim()}
+            className="mt-1 w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold"
+          >{nlLoading ? 'Generating...' : 'Generate from description →'}</button>
+          <p className="text-xs text-slate-600 mt-1 text-center">or fill in manually below</p>
+        </div>
+      )}
 
       <div>
         <label className="text-xs text-slate-400 uppercase tracking-wider">Trip name</label>
