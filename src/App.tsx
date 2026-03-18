@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useStore } from './store'
+import { Onboarding } from './components/Onboarding'
 import { TripList } from './components/trips/TripList'
 import { NewTripForm } from './components/trips/NewTripForm'
 import { PackingView } from './components/packing/PackingView'
@@ -11,6 +13,10 @@ import { ApiSettings } from './components/manage/ApiSettings'
 import { NotionImport } from './components/manage/NotionImport'
 
 export default function App() {
+  const hasOnboarded = useStore(s => s.settings.hasCompletedOnboarding)
+
+  if (!hasOnboarded) return <Onboarding />
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -22,9 +28,9 @@ export default function App() {
             <Route path="items" element={<MasterListView />} />
             <Route path="kits" element={<KitsView />} />
             <Route path="tags" element={<TagsView />} />
+            <Route path="import" element={<NotionImport />} />
             <Route path="backup" element={<ExportImport />} />
             <Route path="api" element={<ApiSettings />} />
-            <Route path="import" element={<NotionImport />} />
           </Route>
         </Routes>
       </div>
