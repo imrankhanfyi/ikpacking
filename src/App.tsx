@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { TripList } from './components/trips/TripList'
 import { NewTripForm } from './components/trips/NewTripForm'
+import { PackingView } from './components/packing/PackingView'
 
 export default function App() {
   return (
@@ -9,7 +10,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<TripList />} />
           <Route path="/trip/new" element={<NewTripForm />} />
-          {/* Additional routes added in later tasks */}
+          <Route path="/trip/:id" element={<PackingView />} />
         </Routes>
       </div>
     </BrowserRouter>
