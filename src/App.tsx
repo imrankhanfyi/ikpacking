@@ -8,6 +8,7 @@ import { KitsView } from './components/manage/KitsView'
 import { TagsView } from './components/manage/TagsView'
 import { ExportImport } from './components/manage/ExportImport'
 import { ApiSettings } from './components/manage/ApiSettings'
+import { NotionImport } from './components/manage/NotionImport'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="tags" element={<TagsView />} />
             <Route path="backup" element={<ExportImport />} />
             <Route path="api" element={<ApiSettings />} />
+            <Route path="import" element={<NotionImport />} />
           </Route>
         </Routes>
       </div>
