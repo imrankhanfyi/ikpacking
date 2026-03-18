@@ -1,6 +1,7 @@
 import { useStore } from '../../store'
 import { TripCard } from './TripCard'
 import { Link } from 'react-router-dom'
+import { SuggestionBanner } from './SuggestionBanner'
 
 export function TripList() {
   const trips = useStore(s => s.trips)
@@ -16,6 +17,8 @@ export function TripList() {
           <Link to="/trip/new" className="text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg">+ New trip</Link>
         </div>
       </div>
+
+      <SuggestionBanner />
 
       {active.length === 0 && past.length === 0 && (
         <p className="text-slate-500 text-center py-12">No trips yet. <Link to="/trip/new" className="text-indigo-400 underline">Plan one.</Link></p>

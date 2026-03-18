@@ -5,6 +5,7 @@ import { PackingColumn } from './PackingColumn'
 import { LastMinuteSection } from './LastMinuteSection'
 import { EssentialsGate } from './EssentialsGate'
 import { computeLastMinuteItems } from '../../lib/lastMinute'
+import { learnFromHistory } from '../../ai/learnFromHistory'
 import { useState } from 'react'
 
 const LEFT_CATS = ['Toiletries', 'Meds', 'Electronics']
@@ -37,6 +38,19 @@ export function PackingView() {
 
   function handleRemove(itemId: string) {
     removeTripItem(trip!.id, itemId)
+  }
+
+  function handleComplete() {
+    completeTrip(trip!.id)
+    navigate('/')
+    // Trigger learning in background (silent fail)
+    const apiKey = useStore.getState().settings.openRouterApiKey
+    const completedTrips = useStore.getState().trips.filter(t => t.completedAt)
+    if (apiKey && completedTrips.length >= 3) {
+      learnFromHistory(apiKey, completedTrips)
+        .then(suggestions => { if (suggestions.length) useStore.getState().setSuggestions(suggestions) })
+        .catch(() => {})
+    }
   }
 
   function handleAddItem(category: string) {
@@ -77,7 +91,7 @@ export function PackingView() {
       {showGate && (
         <EssentialsGate
           items={trip.items.filter(i => i.isEssential && i.isIncluded)}
-          onConfirm={() => { completeTrip(trip.id); navigate('/') }}
+          onConfirm={handleComplete}
           onClose={() => setShowGate(false)}
         />
       )}
