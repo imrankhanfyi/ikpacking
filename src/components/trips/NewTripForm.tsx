@@ -14,7 +14,8 @@ export function NewTripForm() {
   const [name, setName] = useState('')
   const [departureDate, setDepartureDate] = useState('')
   const [step, setStep] = useState<'form' | 'kits' | 'review'>('form')
-  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
+  const allItems = useStore(s => s.masterItems)
+  const masterItems = allItems.filter(i => !i.deletedAt)
   const kits = useStore(s => s.kits)
   const addTrip = useStore(s => s.addTrip)
   const navigate = useNavigate()
@@ -31,7 +32,6 @@ export function NewTripForm() {
     try {
       const parsed = await parseTripDescription(settings.openRouterApiKey, nlInput)
       const items = generateTripItems(masterItems, parsed)
-      console.log('[NewTripForm NL] masterItems:', masterItems.length, 'generated:', items.length, 'parsed:', parsed)
       setProfile({ duration: parsed.duration, weather: parsed.weather, type: parsed.type, mode: parsed.mode, nlDescription: nlInput })
       setName(parsed.name)
       setGeneratedItems(items)
@@ -46,7 +46,6 @@ export function NewTripForm() {
 
   function handleGenerate() {
     const items = generateTripItems(masterItems, profile)
-    console.log('[NewTripForm] masterItems:', masterItems.length, 'generated:', items.length, 'profile:', profile)
     setGeneratedItems(items)
     setStep('kits')
   }

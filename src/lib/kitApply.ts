@@ -1,7 +1,7 @@
-import type { TripItem, Kit } from '../types'
+import type { TripItem, Kit, MasterItem } from '../types'
 import { v4 as uuid } from 'uuid'
 
-export function applyKits(baseItems: TripItem[], allKits: Kit[], activeKitIds: string[]): TripItem[] {
+export function applyKits(baseItems: TripItem[], allKits: Kit[], activeKitIds: string[], masterItems: MasterItem[] = []): TripItem[] {
   const activeKits = activeKitIds.map(id => allKits.find(k => k.id === id)).filter(Boolean) as Kit[]
 
   // Collect all swaps in order; last kit wins per swapped item
@@ -27,16 +27,17 @@ export function applyKits(baseItems: TripItem[], allKits: Kit[], activeKitIds: s
       // Skip if this swap was overridden by a later kit (last kit wins)
       if (kitItem.swapsItemId && swapMap.get(kitItem.swapsItemId) !== kitItem.masterItemId) continue
       if (existingIds.has(kitItem.masterItemId)) continue
+      const master = masterItems.find(m => m.id === kitItem.masterItemId)
       result.push({
         id: uuid(),
         masterItemId: kitItem.masterItemId,
-        name: kitItem.masterItemId, // caller resolves name from master
+        name: master?.name ?? 'Unknown item',
         qty: kitItem.qty,
         isIncluded: true,
         isPacked: false,
-        isLastMinute: false,
-        isEssential: false,
-        category: 'Misc',
+        isLastMinute: master?.isLastMinute ?? false,
+        isEssential: master?.isEssential ?? false,
+        category: master?.category ?? 'Misc',
       })
       existingIds.add(kitItem.masterItemId)
     }

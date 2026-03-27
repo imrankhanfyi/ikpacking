@@ -1,5 +1,6 @@
 import type { Trip, PatternSuggestion } from '../types'
 import { openRouterChat } from './client'
+import { toastError } from '../store/toastStore'
 
 const SYSTEM_PROMPT = `You analyse packing trip history and identify actionable patterns.
 Return a JSON array of suggestions (max 3), each with:
@@ -27,7 +28,9 @@ export async function learnFromHistory(apiKey: string, completedTrips: Trip[]): 
 
   try {
     return JSON.parse(raw.trim())
-  } catch {
+  } catch (e) {
+    console.error('learnFromHistory: failed to parse AI response', e)
+    toastError('Learning from trip history failed — suggestions may be incomplete.')
     return []
   }
 }
