@@ -25,3 +25,6 @@ dist-ssr
 
 # Playwright MCP screenshots
 .playwright-mcp/
+
+# Superpowers brainstorm sessions
+.superpowers/
