@@ -13,6 +13,7 @@ import { ExportImport } from './components/manage/ExportImport'
 import { ApiSettings } from './components/manage/ApiSettings'
 import { NotionImport } from './components/manage/NotionImport'
 import { TrashView } from './components/manage/TrashView'
+import { ToastContainer } from './components/common/Toast'
 
 export default function App() {
   const hasOnboarded = useStore(s => s.settings.hasCompletedOnboarding)
@@ -40,6 +41,7 @@ export default function App() {
           </Route>
         </Routes>
       </div>
+      <ToastContainer />
     </BrowserRouter>
   )
 }
