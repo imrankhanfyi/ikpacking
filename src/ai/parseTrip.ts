@@ -21,7 +21,8 @@ export async function parseTripDescription(apiKey: string, description: string):
     ]
   )
 
-  const parsed = JSON.parse(raw.trim())
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
+  const parsed = JSON.parse(cleaned)
   return {
     name: parsed.name ?? description.slice(0, 40),
     duration: Number(parsed.duration) || 5,

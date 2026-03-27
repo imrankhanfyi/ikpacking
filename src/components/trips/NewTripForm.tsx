@@ -30,11 +30,14 @@ export function NewTripForm() {
     setNlLoading(true)
     try {
       const parsed = await parseTripDescription(settings.openRouterApiKey, nlInput)
+      const items = generateTripItems(masterItems, parsed)
+      console.log('[NewTripForm NL] masterItems:', masterItems.length, 'generated:', items.length, 'parsed:', parsed)
       setProfile({ duration: parsed.duration, weather: parsed.weather, type: parsed.type, mode: parsed.mode, nlDescription: nlInput })
       setName(parsed.name)
-      setGeneratedItems(generateTripItems(masterItems, parsed))
+      setGeneratedItems(items)
       setStep('kits')
     } catch (e) {
+      console.error('AI parsing failed:', e)
       alert('AI parsing failed — fill in manually below.')
     } finally {
       setNlLoading(false)
@@ -42,7 +45,9 @@ export function NewTripForm() {
   }
 
   function handleGenerate() {
-    setGeneratedItems(generateTripItems(masterItems, profile))
+    const items = generateTripItems(masterItems, profile)
+    console.log('[NewTripForm] masterItems:', masterItems.length, 'generated:', items.length, 'profile:', profile)
+    setGeneratedItems(items)
     setStep('kits')
   }
 
@@ -56,7 +61,7 @@ export function NewTripForm() {
       <div className="max-w-lg mx-auto p-6 space-y-4">
         <h2 className="text-xl font-bold text-slate-100">Suggested kits</h2>
         <p className="text-sm text-slate-400">Add any kits relevant to this trip.</p>
-        {kits.map(kit => (
+        {kits.filter(kit => kit.items.length > 0).map(kit => (
           <div key={kit.id} className="flex items-center justify-between bg-slate-900 border border-slate-700 rounded-xl p-4">
             <div>
               <p className="font-medium text-slate-200">{kit.name}</p>
@@ -79,17 +84,28 @@ export function NewTripForm() {
   }
 
   if (step === 'review') {
+    const included = generatedItems.filter(i => i.isIncluded)
+    const byCategory = included.reduce((acc, item) => {
+      acc[item.category] = [...(acc[item.category] ?? []), item]
+      return acc
+    }, {} as Record<string, typeof included>)
+
     return (
-      <div className="max-w-lg mx-auto p-6 space-y-4">
+      <div className="max-w-2xl mx-auto p-6 space-y-6">
         <h2 className="text-xl font-bold text-slate-100">Review your list</h2>
-        <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-          {generatedItems.filter(i => i.isIncluded).map(item => (
-            <div key={item.id} className="flex items-center justify-between py-2 border-b border-slate-800">
-              <span className="text-slate-200">{item.name}{item.qty > 1 && <span className="ml-1 text-xs bg-slate-800 text-indigo-400 px-1.5 py-0.5 rounded">×{item.qty}</span>}</span>
-              <button onClick={() => setGeneratedItems(items => items.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="text-xs text-slate-600 hover:text-red-400">remove</button>
+        {Object.entries(byCategory).map(([cat, items]) => (
+          <section key={cat}>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{cat}</h3>
+            <div className="grid grid-cols-2 gap-x-4">
+              {items.map(item => (
+                <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-slate-800">
+                  <span className="text-sm text-slate-200 truncate">{item.name}{item.qty > 1 && <span className="ml-1 text-xs bg-slate-800 text-indigo-400 px-1.5 py-0.5 rounded">×{item.qty}</span>}</span>
+                  <button onClick={() => setGeneratedItems(items => items.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-2 shrink-0 text-xs text-slate-600 hover:text-red-400">✕</button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </section>
+        ))}
         <div className="flex gap-2 pt-2">
           <button onClick={() => setStep('kits')} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-400">← Back</button>
           <button onClick={handleSave} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Save trip →</button>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useStore } from './store'
 import { Onboarding } from './components/Onboarding'
@@ -14,6 +15,9 @@ import { NotionImport } from './components/manage/NotionImport'
 
 export default function App() {
   const hasOnboarded = useStore(s => s.settings.hasCompletedOnboarding)
+  const mergeMissingSeeds = useStore(s => s.mergeMissingSeeds)
+
+  useEffect(() => { mergeMissingSeeds() }, [])
 
   if (!hasOnboarded) return <Onboarding />
 

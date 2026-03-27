@@ -29,7 +29,7 @@ export function MasterListView() {
           <div className="space-y-1">
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-2 py-2 border-b border-slate-800">
-                <span className="flex-1 text-sm text-slate-200">{item.name}</span>
+                <span className="flex-1 text-sm text-slate-200 cursor-pointer hover:text-indigo-400" onClick={() => setEditing(item)}>{item.name}</span>
                 <div className="flex gap-1">{item.tags.map(t => <TagChip key={t} tag={t} />)}</div>
                 {item.isEssential && <span className="text-xs text-amber-500">essential</span>}
                 {item.isLastMinute && <span className="text-xs text-slate-500">last-min</span>}

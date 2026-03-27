@@ -42,6 +42,9 @@ interface AppStore {
   // Export / Import
   exportData: () => string
   importData: (json: string) => void
+
+  // Seed integrity
+  mergeMissingSeeds: () => void
 }
 
 export const useStore = create<AppStore>()(
@@ -136,6 +139,13 @@ export const useStore = create<AppStore>()(
         pendingSuggestions: s.pendingSuggestions.filter((_, i) => i !== index)
       })),
 
+      mergeMissingSeeds: () => set(s => {
+        const existingNames = new Set(s.masterItems.map(i => i.name))
+        const missing = seedItems.filter(i => !existingNames.has(i.name))
+        if (missing.length === 0) return {}
+        return { masterItems: [...s.masterItems, ...missing] }
+      }),
+
       exportData: () => {
         const { masterItems, kits, trips, settings } = get()
         return JSON.stringify({ masterItems, kits, trips, settings }, null, 2)
@@ -151,6 +161,20 @@ export const useStore = create<AppStore>()(
         })
       },
     }),
-    { name: 'packing-app-store' }
+    {
+      name: 'packing-app-store',
+      version: 1,
+      migrate: (persisted: any) => persisted,
+      merge: (persisted: any, current) => {
+        const storedItems: MasterItem[] = persisted?.masterItems ?? []
+        const existingNames = new Set(storedItems.map(i => i.name))
+        const missing = seedItems.filter(i => !existingNames.has(i.name))
+        return {
+          ...current,
+          ...persisted,
+          masterItems: [...storedItems, ...missing],
+        }
+      },
+    }
   )
 )
