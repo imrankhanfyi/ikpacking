@@ -18,13 +18,19 @@ export function EssentialsGate({ items, onConfirm, onClose }: Props) {
         {items.map(item => {
           const isConfirmed = confirmed.has(item.id)
           return (
-            <button key={item.id}
-              onClick={() => setConfirmed(s => { const n = new Set(s); isConfirmed ? n.delete(item.id) : n.add(item.id); return n })}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${isConfirmed ? 'bg-green-900 text-green-300' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+            <label key={item.id}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
+                isConfirmed ? 'bg-green-900 text-green-300' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              <input
+                type="checkbox"
+                checked={isConfirmed}
+                onChange={() => setConfirmed(s => { const n = new Set(s); isConfirmed ? n.delete(item.id) : n.add(item.id); return n })}
+                className="rounded border-slate-600"
+              />
               {item.name}
-            </button>
+            </label>
           )
         })}
       </div>

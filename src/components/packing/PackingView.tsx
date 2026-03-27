@@ -15,10 +15,11 @@ export function PackingView() {
   const { id } = useParams<{ id: string }>()
   const trip = useStore(s => s.trips.find(t => t.id === id))
   const updateTripItem = useStore(s => s.updateTripItem)
-  const removeTripItem = useStore(s => s.removeTripItem)
   const addTripItem = useStore(s => s.addTripItem)
   const completeTrip = useStore(s => s.completeTrip)
   const [showGate, setShowGate] = useState(false)
+  const [addingCategory, setAddingCategory] = useState<string | null>(null)
+  const [newItemName, setNewItemName] = useState('')
   const navigate = useNavigate()
 
   if (!trip) return <div className="p-6 text-slate-400">Trip not found</div>
@@ -37,7 +38,11 @@ export function PackingView() {
   }
 
   function handleRemove(itemId: string) {
-    removeTripItem(trip!.id, itemId)
+    updateTripItem(trip!.id, itemId, { isIncluded: false })
+  }
+
+  function handleRestore(itemId: string) {
+    updateTripItem(trip!.id, itemId, { isIncluded: true })
   }
 
   function handleComplete() {
@@ -54,19 +59,20 @@ export function PackingView() {
   }
 
   function handleAddItem(category: string) {
-    const name = prompt('Item name:')
-    if (!name) return
+    if (!newItemName.trim()) return
     addTripItem(trip!.id, {
-      masterItemId: null, name, qty: 1, isIncluded: true, isPacked: false,
+      masterItemId: null, name: newItemName.trim(), qty: 1, isIncluded: true, isPacked: false,
       isLastMinute: false, isEssential: false, category
     })
+    setNewItemName('')
+    setAddingCategory(null)
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <button onClick={() => navigate('/')} className="text-xs text-slate-500 hover:text-slate-300 mb-1">← Trips</button>
+          <button onClick={() => navigate('/')} className="text-sm text-slate-400 hover:text-slate-300 mb-1">← Trips</button>
           <h1 className="text-xl font-bold text-slate-100">{trip.name}</h1>
           <p className="text-xs text-slate-500">{trip.departureDate} · {trip.profile.duration}d · {trip.profile.weather} · {trip.profile.type}</p>
         </div>
@@ -77,13 +83,28 @@ export function PackingView() {
 
       <div className="mb-4"><ProgressBar packed={packed.length} total={included.length} /></div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <PackingColumn categories={LEFT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} />
-        <PackingColumn categories={RIGHT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <PackingColumn categories={LEFT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
+        <PackingColumn categories={RIGHT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
       </div>
 
+      {included.length === 0 && (
+        <p className="text-sm text-slate-500 text-center py-12">This trip has no items. Go back and add some.</p>
+      )}
+
       <div className="mt-4">
-        <button onClick={() => handleAddItem('Misc')} className="text-sm text-indigo-400 hover:text-indigo-300">+ Add item</button>
+        {addingCategory ? (
+          <div className="flex gap-2">
+            <input value={newItemName} onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(addingCategory); if (e.key === 'Escape') setAddingCategory(null) }}
+              placeholder="Item name..." autoFocus
+              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" />
+            <button onClick={() => handleAddItem(addingCategory)} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm">Add</button>
+            <button onClick={() => setAddingCategory(null)} className="px-3 py-2 bg-slate-800 text-slate-400 rounded-lg text-sm">Cancel</button>
+          </div>
+        ) : (
+          <button onClick={() => setAddingCategory('Misc')} className="text-sm text-indigo-400 hover:text-indigo-300">+ Add item</button>
+        )}
       </div>
 
       <LastMinuteSection items={lastMinuteItems} onToggle={handleToggle} tripId={trip.id} />

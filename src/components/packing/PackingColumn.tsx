@@ -7,9 +7,10 @@ interface Props {
   onToggle: (id: string) => void
   onQtyChange: (id: string, qty: number) => void
   onRemove: (id: string) => void
+  onRestore: (id: string) => void
 }
 
-export function PackingColumn({ categories, items, onToggle, onQtyChange, onRemove }: Props) {
+export function PackingColumn({ categories, items, onToggle, onQtyChange, onRemove, onRestore }: Props) {
   return (
     <div className="space-y-4">
       {categories.map(cat => {
@@ -23,6 +24,7 @@ export function PackingColumn({ categories, items, onToggle, onQtyChange, onRemo
                 onToggle={() => onToggle(item.id)}
                 onQtyChange={qty => onQtyChange(item.id, qty)}
                 onRemove={() => onRemove(item.id)}
+                onRestore={() => onRestore(item.id)}
               />
             ))}
           </section>
