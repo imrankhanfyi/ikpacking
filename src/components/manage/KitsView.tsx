@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useStore } from '../../store'
 import type { Kit } from '../../types'
 import { KitForm } from './KitForm'
+import { toastUndo } from '../../store/toastStore'
 
 export function KitsView() {
   const kits = useStore(s => s.kits)
   const allItems = useStore(s => s.masterItems)
   const masterItems = allItems.filter(i => !i.deletedAt)
   const deleteKit = useStore(s => s.deleteKit)
+  const addKit = useStore(s => s.addKit)
   const [editing, setEditing] = useState<Kit | null | 'new'>(null)
 
   function itemName(id: string) {
@@ -25,7 +27,11 @@ export function KitsView() {
             <h3 className="font-semibold text-slate-200">{kit.name}</h3>
             <div className="flex gap-2">
               <button onClick={() => setEditing(kit)} className="text-xs text-slate-500 hover:text-indigo-400">edit</button>
-              <button onClick={() => { if (confirm(`Delete kit "${kit.name}"?`)) deleteKit(kit.id) }} className="text-xs text-slate-500 hover:text-red-400">delete</button>
+              <button onClick={() => {
+                  const savedKit = { name: kit.name, items: [...kit.items] }
+                  deleteKit(kit.id)
+                  toastUndo(`Kit "${kit.name}" deleted`, () => addKit(savedKit))
+                }} className="text-xs text-slate-500 hover:text-red-400">delete</button>
             </div>
           </div>
           <div className="space-y-1">
