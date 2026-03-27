@@ -5,7 +5,8 @@ import { TagChip } from '../common/TagChip'
 import { ItemForm } from './ItemForm'
 
 export function MasterListView() {
-  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
+  const allItems = useStore(s => s.masterItems)
+  const masterItems = allItems.filter(i => !i.deletedAt)
   const deleteMasterItem = useStore(s => s.deleteMasterItem)
   const [editing, setEditing] = useState<MasterItem | null | 'new'>(null)
   const [filter, setFilter] = useState('')
