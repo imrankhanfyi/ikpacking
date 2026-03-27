@@ -14,6 +14,7 @@ export interface MasterItem {
   qtyBasis: QtyBasis
   isLastMinute: boolean
   isEssential: boolean
+  deletedAt?: string | null  // ISO date string — soft delete
 }
 
 export interface KitItem {

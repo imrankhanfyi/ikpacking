@@ -17,6 +17,9 @@ interface AppStore {
   addMasterItem: (item: Omit<MasterItem, 'id'>) => void
   updateMasterItem: (id: string, updates: Partial<MasterItem>) => void
   deleteMasterItem: (id: string) => void
+  restoreMasterItem: (id: string) => void
+  permanentlyDeleteMasterItem: (id: string) => void
+  emptyTrash: () => void
   renameTag: (oldTag: string, newTag: string) => void
 
   // Kit actions
@@ -31,6 +34,8 @@ interface AppStore {
   addTripItem: (tripId: string, item: Omit<TripItem, 'id'>) => void
   removeTripItem: (tripId: string, itemId: string) => void
   completeTrip: (id: string) => void
+  renameTrip: (id: string, name: string) => void
+  deleteTrip: (id: string) => void
 
   // Settings
   updateSettings: (updates: Partial<AppSettings>) => void
@@ -65,7 +70,19 @@ export const useStore = create<AppStore>()(
       })),
 
       deleteMasterItem: (id) => set(s => ({
+        masterItems: s.masterItems.map(i => i.id === id ? { ...i, deletedAt: new Date().toISOString() } : i)
+      })),
+
+      restoreMasterItem: (id) => set(s => ({
+        masterItems: s.masterItems.map(i => i.id === id ? { ...i, deletedAt: null } : i)
+      })),
+
+      permanentlyDeleteMasterItem: (id) => set(s => ({
         masterItems: s.masterItems.filter(i => i.id !== id)
+      })),
+
+      emptyTrash: () => set(s => ({
+        masterItems: s.masterItems.filter(i => !i.deletedAt)
       })),
 
       renameTag: (oldTag, newTag) => set(s => ({
@@ -129,6 +146,14 @@ export const useStore = create<AppStore>()(
         )
       })),
 
+      renameTrip: (id, name) => set(s => ({
+        trips: s.trips.map(t => t.id === id ? { ...t, name } : t)
+      })),
+
+      deleteTrip: (id) => set(s => ({
+        trips: s.trips.filter(t => t.id !== id)
+      })),
+
       updateSettings: (updates) => set(s => ({
         settings: { ...s.settings, ...updates }
       })),
@@ -140,6 +165,7 @@ export const useStore = create<AppStore>()(
       })),
 
       mergeMissingSeeds: () => set(s => {
+        // Include trashed items so we don't re-add seeds that were intentionally deleted
         const existingNames = new Set(s.masterItems.map(i => i.name))
         const missing = seedItems.filter(i => !existingNames.has(i.name))
         if (missing.length === 0) return {}

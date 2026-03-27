@@ -12,6 +12,7 @@ import { TagsView } from './components/manage/TagsView'
 import { ExportImport } from './components/manage/ExportImport'
 import { ApiSettings } from './components/manage/ApiSettings'
 import { NotionImport } from './components/manage/NotionImport'
+import { TrashView } from './components/manage/TrashView'
 
 export default function App() {
   const hasOnboarded = useStore(s => s.settings.hasCompletedOnboarding)
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="items" element={<MasterListView />} />
             <Route path="kits" element={<KitsView />} />
             <Route path="tags" element={<TagsView />} />
+            <Route path="trash" element={<TrashView />} />
             <Route path="import" element={<NotionImport />} />
             <Route path="backup" element={<ExportImport />} />
             <Route path="api" element={<ApiSettings />} />

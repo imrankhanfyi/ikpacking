@@ -1,7 +1,7 @@
 import { useStore } from '../../store'
 
 export function TagsView() {
-  const masterItems = useStore(s => s.masterItems)
+  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
   const renameTag = useStore(s => s.renameTag)
 
   const tagCounts = masterItems.reduce((acc, item) => {

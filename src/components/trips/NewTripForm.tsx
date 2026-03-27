@@ -14,7 +14,7 @@ export function NewTripForm() {
   const [name, setName] = useState('')
   const [departureDate, setDepartureDate] = useState('')
   const [step, setStep] = useState<'form' | 'kits' | 'review'>('form')
-  const masterItems = useStore(s => s.masterItems)
+  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
   const kits = useStore(s => s.kits)
   const addTrip = useStore(s => s.addTrip)
   const navigate = useNavigate()
@@ -96,11 +96,16 @@ export function NewTripForm() {
         {Object.entries(byCategory).map(([cat, items]) => (
           <section key={cat}>
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{cat}</h3>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
               {items.map(item => (
                 <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-sm text-slate-200 truncate">{item.name}{item.qty > 1 && <span className="ml-1 text-xs bg-slate-800 text-indigo-400 px-1.5 py-0.5 rounded">×{item.qty}</span>}</span>
-                  <button onClick={() => setGeneratedItems(items => items.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-2 shrink-0 text-xs text-slate-600 hover:text-red-400">✕</button>
+                  <span className="text-sm text-slate-200 truncate">{item.name}</span>
+                  <div className="ml-2 shrink-0 flex items-center gap-1.5">
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:text-slate-200 text-sm">−</button>
+                    <span className="text-xs text-indigo-400 w-6 text-center">{item.qty}</span>
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:text-slate-200 text-sm">+</button>
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-1 px-2 py-1 rounded bg-red-950 text-red-400 hover:bg-red-900 text-xs">Remove</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -148,7 +153,20 @@ export function NewTripForm() {
 
       <div>
         <label className="text-xs text-slate-400 uppercase tracking-wider">Duration (days)</label>
-        <input type="number" min={1} max={90} value={profile.duration} onChange={e => setProfile(p => ({ ...p, duration: Number(e.target.value) }))} className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" />
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={profile.duration === 0 ? '' : String(profile.duration)}
+          onChange={e => {
+            const raw = e.target.value.replace(/[^0-9]/g, '')
+            const n = raw === '' ? 0 : Math.min(parseInt(raw, 10), 90)
+            setProfile(p => ({ ...p, duration: n }))
+          }}
+          onBlur={() => { if (profile.duration < 1) setProfile(p => ({ ...p, duration: 1 })) }}
+          placeholder="5"
+          className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500"
+        />
       </div>
 
       {[

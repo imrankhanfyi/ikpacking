@@ -4,6 +4,7 @@ const links = [
   { to: '/manage/items', label: 'Master list' },
   { to: '/manage/kits', label: 'Kits' },
   { to: '/manage/tags', label: 'Tags' },
+  { to: '/manage/trash', label: 'Trash' },
   { to: '/manage/import', label: 'Notion import' },
   { to: '/manage/backup', label: 'Export / Import' },
   { to: '/manage/api', label: 'API key' },
@@ -11,13 +12,24 @@ const links = [
 
 export function ManageLayout() {
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <div className="flex items-center gap-4 mb-4 sm:mb-6">
         <NavLink to="/" className="text-xs text-slate-500 hover:text-slate-300">← Trips</NavLink>
         <h1 className="text-xl font-bold text-slate-100">Manage</h1>
       </div>
+
+      {/* Mobile: horizontal scrollable tabs */}
+      <nav className="sm:hidden flex gap-2 overflow-x-auto pb-3 mb-4 -mx-4 px-4 scrollbar-none">
+        {links.map(l => (
+          <NavLink key={l.to} to={l.to}
+            className={({ isActive }) => `shrink-0 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-800 text-slate-400'}`}
+          >{l.label}</NavLink>
+        ))}
+      </nav>
+
       <div className="flex gap-6">
-        <nav className="w-40 flex-shrink-0 space-y-1">
+        {/* Desktop: sidebar */}
+        <nav className="hidden sm:block w-40 flex-shrink-0 space-y-1">
           {links.map(l => (
             <NavLink key={l.to} to={l.to}
               className={({ isActive }) => `block px-3 py-2 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-900 text-indigo-200' : 'text-slate-400 hover:text-slate-200'}`}

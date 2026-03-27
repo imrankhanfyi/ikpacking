@@ -5,7 +5,7 @@ import { TagChip } from '../common/TagChip'
 import { ItemForm } from './ItemForm'
 
 export function MasterListView() {
-  const masterItems = useStore(s => s.masterItems)
+  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
   const deleteMasterItem = useStore(s => s.deleteMasterItem)
   const [editing, setEditing] = useState<MasterItem | null | 'new'>(null)
   const [filter, setFilter] = useState('')
@@ -28,14 +28,15 @@ export function MasterListView() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{cat}</h3>
           <div className="space-y-1">
             {items.map(item => (
-              <div key={item.id} className="flex items-center gap-2 py-2 border-b border-slate-800">
-                <span className="flex-1 text-sm text-slate-200 cursor-pointer hover:text-indigo-400" onClick={() => setEditing(item)}>{item.name}</span>
+              <div key={item.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-2 border-b border-slate-800">
+                <span className="text-sm text-slate-200 cursor-pointer hover:text-indigo-400" onClick={() => setEditing(item)}>{item.name}</span>
                 <div className="flex gap-1">{item.tags.map(t => <TagChip key={t} tag={t} />)}</div>
                 {item.isEssential && <span className="text-xs text-amber-500">essential</span>}
                 {item.isLastMinute && <span className="text-xs text-slate-500">last-min</span>}
                 <span className="text-xs text-slate-600">{item.qtyBasis === 'per-day' ? '×/day' : `×${item.defaultQty}`}</span>
+                <span className="flex-1" />
                 <button onClick={() => setEditing(item)} className="text-xs text-slate-600 hover:text-indigo-400">edit</button>
-                <button onClick={() => deleteMasterItem(item.id)} className="text-xs text-slate-600 hover:text-red-400">del</button>
+                <button onClick={() => { if (confirm(`Delete "${item.name}"?`)) deleteMasterItem(item.id) }} className="text-xs text-slate-600 hover:text-red-400">del</button>
               </div>
             ))}
           </div>

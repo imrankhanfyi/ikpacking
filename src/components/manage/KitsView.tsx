@@ -5,7 +5,7 @@ import { KitForm } from './KitForm'
 
 export function KitsView() {
   const kits = useStore(s => s.kits)
-  const masterItems = useStore(s => s.masterItems)
+  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
   const deleteKit = useStore(s => s.deleteKit)
   const [editing, setEditing] = useState<Kit | null | 'new'>(null)
 
@@ -24,7 +24,7 @@ export function KitsView() {
             <h3 className="font-semibold text-slate-200">{kit.name}</h3>
             <div className="flex gap-2">
               <button onClick={() => setEditing(kit)} className="text-xs text-slate-500 hover:text-indigo-400">edit</button>
-              <button onClick={() => deleteKit(kit.id)} className="text-xs text-slate-500 hover:text-red-400">delete</button>
+              <button onClick={() => { if (confirm(`Delete kit "${kit.name}"?`)) deleteKit(kit.id) }} className="text-xs text-slate-500 hover:text-red-400">delete</button>
             </div>
           </div>
           <div className="space-y-1">
