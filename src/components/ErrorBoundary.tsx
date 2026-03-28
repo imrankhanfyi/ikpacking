@@ -22,13 +22,13 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
           <div className="max-w-sm text-center space-y-4">
-            <h1 className="text-xl font-bold text-slate-100">Something went wrong</h1>
-            <p className="text-sm text-slate-400">The app hit an unexpected error.</p>
+            <h1 className="text-xl font-bold text-[#2d2d2d]">Something went wrong</h1>
+            <p className="text-sm text-[#999]">The app hit an unexpected error.</p>
             <button
               onClick={() => { this.setState({ hasError: false }); window.location.href = '/' }}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold"
+              className="px-6 py-2 bg-[#2d2d2d] hover:bg-[#444] text-white rounded text-sm font-semibold"
             >
               Reload
             </button>
