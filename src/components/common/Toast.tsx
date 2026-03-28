@@ -12,6 +12,7 @@ export function ToastContainer() {
       {toasts.map((t) => (
         <div
           key={t.id}
+          role="alert"
           className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm max-w-sm w-full animate-[slideUp_0.2s_ease-out] ${
             t.type === 'error'
               ? 'bg-red-950 border border-red-800 text-red-200'
@@ -34,6 +35,7 @@ export function ToastContainer() {
           )}
           <button
             onClick={() => removeToast(t.id)}
+            aria-label="Dismiss"
             className="shrink-0 text-current opacity-50 hover:opacity-100"
           >
             ✕

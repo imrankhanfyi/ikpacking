@@ -14,6 +14,13 @@ html {
   display: none;
 }
 
+/* Focus ring for keyboard navigation (only visible on keyboard focus) */
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
