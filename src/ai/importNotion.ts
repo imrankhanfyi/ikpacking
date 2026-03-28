@@ -1,5 +1,6 @@
 import type { MasterItem } from '../types'
 import { openRouterChat } from './client'
+import { AI_MODEL } from '../constants'
 
 const SYSTEM_PROMPT = `Parse a Notion packing list (markdown checkbox format) into a JSON array of items.
 For each item return:
@@ -19,7 +20,7 @@ export interface ImportedItem extends Omit<MasterItem, 'id'> {
 }
 
 export async function importNotionList(apiKey: string, markdown: string): Promise<ImportedItem[]> {
-  const raw = await openRouterChat(apiKey, 'anthropic/claude-haiku-4-5', [
+  const raw = await openRouterChat(apiKey, AI_MODEL, [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: markdown },
   ])

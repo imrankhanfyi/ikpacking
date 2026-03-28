@@ -7,9 +7,7 @@ import { EssentialsGate } from './EssentialsGate'
 import { computeLastMinuteItems } from '../../lib/lastMinute'
 import { learnFromHistory } from '../../ai/learnFromHistory'
 import { useState } from 'react'
-
-const LEFT_CATS = ['Toiletries', 'Meds', 'Electronics']
-const RIGHT_CATS = ['Clothing', 'Misc']
+import { CATEGORY_LAYOUT } from '../../constants'
 
 export function PackingView() {
   const { id } = useParams<{ id: string }>()
@@ -84,8 +82,8 @@ export function PackingView() {
       <div className="mb-4"><ProgressBar packed={packed.length} total={included.length} /></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <PackingColumn categories={LEFT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
-        <PackingColumn categories={RIGHT_CATS} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
+        <PackingColumn categories={CATEGORY_LAYOUT.LEFT} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
+        <PackingColumn categories={CATEGORY_LAYOUT.RIGHT} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
       </div>
 
       {included.length === 0 && (

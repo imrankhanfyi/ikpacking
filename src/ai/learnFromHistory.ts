@@ -1,6 +1,7 @@
 import type { Trip, PatternSuggestion } from '../types'
 import { openRouterChat } from './client'
 import { toastError } from '../store/toastStore'
+import { AI_MODEL } from '../constants'
 
 const SYSTEM_PROMPT = `You analyse packing trip history and identify actionable patterns.
 Return a JSON array of suggestions (max 3), each with:
@@ -21,7 +22,7 @@ export async function learnFromHistory(apiKey: string, completedTrips: Trip[]): 
     skipped: t.items.filter(i => !i.isIncluded || (!i.isPacked && i.isIncluded)).map(i => i.name),
   }))
 
-  const raw = await openRouterChat(apiKey, 'anthropic/claude-haiku-4-5', [
+  const raw = await openRouterChat(apiKey, AI_MODEL, [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: JSON.stringify(summary) },
   ])

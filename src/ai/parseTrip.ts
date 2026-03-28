@@ -1,5 +1,6 @@
 import type { TripProfile } from '../types'
 import { openRouterChat } from './client'
+import { AI_MODEL } from '../constants'
 
 const SYSTEM_PROMPT = `You parse trip descriptions into structured JSON.
 Return ONLY valid JSON with these fields:
@@ -14,7 +15,7 @@ Infer from context. "Edinburgh in October" → cold. "work dinner" → business.
 export async function parseTripDescription(apiKey: string, description: string): Promise<TripProfile & { name: string }> {
   const raw = await openRouterChat(
     apiKey,
-    'anthropic/claude-haiku-4-5',
+    AI_MODEL,
     [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: description },

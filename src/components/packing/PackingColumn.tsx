@@ -2,7 +2,7 @@ import type { TripItem } from '../../types'
 import { PackingItem } from './PackingItem'
 
 interface Props {
-  categories: string[]
+  categories: readonly string[]
   items: TripItem[]
   onToggle: (id: string) => void
   onQtyChange: (id: string, qty: number) => void
