@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useStore } from './store'
 import { Onboarding } from './components/Onboarding'
 import { TripList } from './components/trips/TripList'
@@ -13,6 +13,8 @@ import { ExportImport } from './components/manage/ExportImport'
 import { ApiSettings } from './components/manage/ApiSettings'
 import { NotionImport } from './components/manage/NotionImport'
 import { TrashView } from './components/manage/TrashView'
+import { ToastContainer } from './components/common/Toast'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function App() {
   const hasOnboarded = useStore(s => s.settings.hasCompletedOnboarding)
@@ -23,23 +25,27 @@ export default function App() {
   if (!hasOnboarded) return <Onboarding />
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <Routes>
-          <Route path="/" element={<TripList />} />
-          <Route path="/trip/new" element={<NewTripForm />} />
-          <Route path="/trip/:id" element={<PackingView />} />
-          <Route path="/manage" element={<ManageLayout />}>
-            <Route path="items" element={<MasterListView />} />
-            <Route path="kits" element={<KitsView />} />
-            <Route path="tags" element={<TagsView />} />
-            <Route path="trash" element={<TrashView />} />
-            <Route path="import" element={<NotionImport />} />
-            <Route path="backup" element={<ExportImport />} />
-            <Route path="api" element={<ApiSettings />} />
-          </Route>
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <div className="min-h-screen bg-slate-950 text-slate-100">
+          <Routes>
+            <Route path="/" element={<TripList />} />
+            <Route path="/trip/new" element={<NewTripForm />} />
+            <Route path="/trip/:id" element={<PackingView />} />
+            <Route path="/manage" element={<ManageLayout />}>
+              <Route index element={<Navigate to="items" replace />} />
+              <Route path="items" element={<MasterListView />} />
+              <Route path="kits" element={<KitsView />} />
+              <Route path="tags" element={<TagsView />} />
+              <Route path="trash" element={<TrashView />} />
+              <Route path="import" element={<NotionImport />} />
+              <Route path="backup" element={<ExportImport />} />
+              <Route path="api" element={<ApiSettings />} />
+            </Route>
+          </Routes>
+        </div>
+        <ToastContainer />
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

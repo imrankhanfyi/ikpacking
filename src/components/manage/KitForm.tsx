@@ -4,10 +4,12 @@ import type { Kit, KitItem } from '../../types'
 import { Modal } from '../common/Modal'
 
 export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void }) {
-  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
+  const allItems = useStore(s => s.masterItems)
+  const masterItems = allItems.filter(i => !i.deletedAt)
   const addKit = useStore(s => s.addKit)
   const updateKit = useStore(s => s.updateKit)
 
+  const [nameError, setNameError] = useState(false)
   const [name, setName] = useState(kit?.name ?? '')
   const [items, setItems] = useState<KitItem[]>(kit?.items ?? [])
   const [search, setSearch] = useState('')
@@ -31,7 +33,8 @@ export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void
   }
 
   function handleSave() {
-    if (!name.trim()) return
+    if (!name.trim()) { setNameError(true); return }
+    setNameError(false)
     if (kit) updateKit(kit.id, { name, items })
     else addKit({ name, items })
     onClose()
@@ -44,7 +47,8 @@ export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void
   return (
     <Modal title={kit ? 'Edit kit' : 'New kit'} onClose={onClose}>
       <div className="space-y-4">
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Kit name (e.g. Hiking)" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" />
+        <input value={name} onChange={e => { setName(e.target.value); setNameError(false) }} placeholder="Kit name (e.g. Hiking)" className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 ${nameError ? 'border-red-500' : 'border-slate-700'}`} />
+        {nameError && <p className="text-xs text-red-400">Name is required</p>}
 
         <div>
           <p className="text-xs text-slate-500 mb-1">Items in this kit</p>

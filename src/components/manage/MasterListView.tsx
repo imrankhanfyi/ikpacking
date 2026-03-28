@@ -3,10 +3,13 @@ import { useStore } from '../../store'
 import type { MasterItem } from '../../types'
 import { TagChip } from '../common/TagChip'
 import { ItemForm } from './ItemForm'
+import { toastUndo } from '../../store/toastStore'
 
 export function MasterListView() {
-  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
+  const allItems = useStore(s => s.masterItems)
+  const masterItems = allItems.filter(i => !i.deletedAt)
   const deleteMasterItem = useStore(s => s.deleteMasterItem)
+  const restoreMasterItem = useStore(s => s.restoreMasterItem)
   const [editing, setEditing] = useState<MasterItem | null | 'new'>(null)
   const [filter, setFilter] = useState('')
 
@@ -36,12 +39,19 @@ export function MasterListView() {
                 <span className="text-xs text-slate-600">{item.qtyBasis === 'per-day' ? '×/day' : `×${item.defaultQty}`}</span>
                 <span className="flex-1" />
                 <button onClick={() => setEditing(item)} className="text-xs text-slate-600 hover:text-indigo-400">edit</button>
-                <button onClick={() => { if (confirm(`Delete "${item.name}"?`)) deleteMasterItem(item.id) }} className="text-xs text-slate-600 hover:text-red-400">del</button>
+                <button onClick={() => {
+                  deleteMasterItem(item.id)
+                  toastUndo(`"${item.name}" moved to trash`, () => restoreMasterItem(item.id))
+                }} className="text-xs text-slate-600 hover:text-red-400">del</button>
               </div>
             ))}
           </div>
         </section>
       ))}
+
+      {filter && Object.keys(grouped).length === 0 && (
+        <p className="text-sm text-slate-500 text-center py-6">No items match "{filter}".</p>
+      )}
 
       {editing && <ItemForm item={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
     </div>

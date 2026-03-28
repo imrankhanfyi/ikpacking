@@ -1,4 +1,5 @@
 import { useStore } from '../../store'
+import { toast, toastError } from '../../store/toastStore'
 
 export function ExportImport() {
   const exportData = useStore(s => s.exportData)
@@ -21,9 +22,9 @@ export function ExportImport() {
     reader.onload = (ev) => {
       try {
         importData(ev.target?.result as string)
-        alert('Data imported successfully.')
+        toast('Data imported successfully.')
       } catch {
-        alert('Failed to parse backup file.')
+        toastError('Failed to parse backup file.')
       }
     }
     reader.readAsText(file)

@@ -36,6 +36,7 @@ interface AppStore {
   completeTrip: (id: string) => void
   renameTrip: (id: string, name: string) => void
   deleteTrip: (id: string) => void
+  duplicateTrip: (id: string) => string
 
   // Settings
   updateSettings: (updates: Partial<AppSettings>) => void
@@ -153,6 +154,29 @@ export const useStore = create<AppStore>()(
       deleteTrip: (id) => set(s => ({
         trips: s.trips.filter(t => t.id !== id)
       })),
+
+      duplicateTrip: (id) => {
+        const trip = get().trips.find(t => t.id === id)
+        if (!trip) return ''
+        const newId = uuid()
+        set(s => ({
+          trips: [...s.trips, {
+            ...trip,
+            id: newId,
+            name: `${trip.name} (copy)`,
+            createdAt: new Date().toISOString(),
+            departureDate: new Date().toISOString().split('T')[0],
+            completedAt: null,
+            items: trip.items.map(item => ({
+              ...item,
+              id: uuid(),
+              isPacked: false,
+              isIncluded: true,
+            })),
+          }]
+        }))
+        return newId
+      },
 
       updateSettings: (updates) => set(s => ({
         settings: { ...s.settings, ...updates }

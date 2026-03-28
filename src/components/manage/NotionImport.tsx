@@ -2,18 +2,22 @@ import { useState } from 'react'
 import { useStore } from '../../store'
 import { importNotionList } from '../../ai/importNotion'
 import type { ImportedItem } from '../../ai/importNotion'
+import { toast } from '../../store/toastStore'
 
 export function NotionImport() {
   const [markdown, setMarkdown] = useState('')
   const [parsed, setParsed] = useState<ImportedItem[] | null>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const settings = useStore(s => s.settings)
-  const masterItems = useStore(s => s.masterItems.filter(i => !i.deletedAt))
+  const allItems = useStore(s => s.masterItems)
+  const masterItems = allItems.filter(i => !i.deletedAt)
   const addMasterItem = useStore(s => s.addMasterItem)
 
   async function handleParse() {
-    if (!settings.openRouterApiKey) { alert('Set an API key first in API Settings.'); return }
+    setError('')
+    if (!settings.openRouterApiKey) { setError('Set an API key first in API Settings.'); return }
     setLoading(true)
     try {
       const items = await importNotionList(settings.openRouterApiKey, markdown)
@@ -22,7 +26,7 @@ export function NotionImport() {
       setParsed(items)
       setSelected(sel)
     } catch (e) {
-      alert('Failed to parse. Try again or paste fewer lists at once.')
+      setError('Failed to parse. Try again or paste fewer items.')
     } finally {
       setLoading(false)
     }
@@ -35,7 +39,7 @@ export function NotionImport() {
     })
     setParsed(null)
     setMarkdown('')
-    alert(`Imported ${selected.size} items.`)
+    toast(`Imported ${selected.size} items.`)
   }
 
   return (
@@ -45,6 +49,7 @@ export function NotionImport() {
 
       {!parsed && (
         <>
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <textarea value={markdown} onChange={e => setMarkdown(e.target.value)} placeholder="Paste Notion packing list markdown here..." rows={12} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm font-mono focus:outline-none focus:border-indigo-500 resize-y" />
           <button onClick={handleParse} disabled={loading || !markdown.trim()} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold">
             {loading ? 'Parsing...' : 'Parse with AI →'}
@@ -52,7 +57,11 @@ export function NotionImport() {
         </>
       )}
 
-      {parsed && (
+      {parsed && parsed.length === 0 && (
+        <p className="text-sm text-slate-500">No items found in that file.</p>
+      )}
+
+      {parsed && parsed.length > 0 && (
         <>
           <p className="text-xs text-slate-400">{parsed.length} items found. {selected.size} selected to import.</p>
           <div className="space-y-1 max-h-96 overflow-y-auto">
