@@ -29,8 +29,8 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="min-h-screen bg-slate-950 text-slate-100">
-          <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><p className="text-slate-500 text-sm">Loading...</p></div>}>
+        <div className="min-h-screen bg-[#fefefe] text-[#2d2d2d]">
+          <Suspense fallback={<div className="min-h-screen bg-[#fefefe] flex items-center justify-center"><p className="text-[#999] text-sm">Loading...</p></div>}>
             <Routes>
               <Route path="/" element={<TripList />} />
               <Route path="/trip/new" element={<NewTripForm />} />

@@ -65,25 +65,25 @@ export function NewTripForm() {
   if (step === 'kits') {
     return (
       <div className="max-w-lg mx-auto p-6 space-y-4">
-        <h2 className="text-xl font-bold text-slate-100">Suggested kits</h2>
-        <p className="text-sm text-slate-400">Add any kits relevant to this trip.</p>
+        <h2 className="text-xl font-bold text-[#2d2d2d]">Suggested kits</h2>
+        <p className="text-sm text-[#999]">Add any kits relevant to this trip.</p>
         {kits.filter(kit => kit.items.length > 0).map(kit => (
-          <div key={kit.id} className="flex items-center justify-between bg-slate-900 border border-slate-700 rounded-xl p-4">
+          <div key={kit.id} className={`flex items-center justify-between border-[1.5px] rounded p-4 ${activeKitIds.includes(kit.id) ? 'border-[#2a6e4e] bg-[#f0f7f3]' : 'border-[#ddd]'}`}>
             <div>
-              <p className="font-medium text-slate-200">{kit.name}</p>
-              <p className="text-xs text-slate-500">{kit.items.length} items</p>
+              <p className="font-medium text-[#2d2d2d]">{kit.name}</p>
+              <p className="text-xs text-[#999]">{kit.items.length} items</p>
             </div>
             <button
               onClick={() => setActiveKitIds(ids => ids.includes(kit.id) ? ids.filter(i => i !== kit.id) : [...ids, kit.id])}
-              className={`px-3 py-1 text-sm rounded-lg ${activeKitIds.includes(kit.id) ? 'bg-green-800 text-green-300' : 'bg-slate-800 text-slate-400'}`}
+              className={`px-3 py-1 text-sm rounded ${activeKitIds.includes(kit.id) ? 'bg-[#2a6e4e] text-white' : 'border-[1.5px] border-[#ddd] text-[#999]'}`}
             >
               {activeKitIds.includes(kit.id) ? '✓ Added' : '+ Add'}
             </button>
           </div>
         ))}
         <div className="flex gap-2 pt-2">
-          <button onClick={() => setStep('form')} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-400">← Back</button>
-          <button onClick={() => setStep('review')} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white">Review list →</button>
+          <button onClick={() => setStep('form')} className="flex-1 py-2 rounded border-[1.5px] border-[#ddd] text-[#999]">← Back</button>
+          <button onClick={() => setStep('review')} className="flex-1 py-2 rounded bg-[#2d2d2d] text-white font-bold">Review list →</button>
         </div>
       </div>
     )
@@ -98,19 +98,19 @@ export function NewTripForm() {
 
     return (
       <div className="max-w-2xl mx-auto p-6 space-y-6">
-        <h2 className="text-xl font-bold text-slate-100">Review your list</h2>
+        <h2 className="text-xl font-bold text-[#2d2d2d]">Review your list</h2>
         {Object.entries(byCategory).map(([cat, items]) => (
           <section key={cat}>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">{cat}</h3>
+            <h3 className="font-mono text-[10px] uppercase tracking-[3px] text-[#999] border-b-[1.5px] border-[#2d2d2d] pb-1 mb-2">{cat}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
               {items.map(item => (
-                <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-slate-800">
-                  <span className="text-sm text-slate-200 truncate">{item.name}</span>
+                <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-[#eee]">
+                  <span className="text-sm text-[#2d2d2d] truncate">{item.name}</span>
                   <div className="ml-2 shrink-0 flex items-center gap-1.5">
-                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:text-slate-200 text-sm">−</button>
-                    <span className="text-xs text-indigo-400 w-6 text-center">{item.qty}</span>
-                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-slate-800 text-slate-400 hover:text-slate-200 text-sm">+</button>
-                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-1 px-2 py-1 rounded bg-red-950 text-red-400 hover:bg-red-900 text-xs">Remove</button>
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-[#f5f3ef] text-[#999] hover:text-[#2d2d2d] text-sm">−</button>
+                    <span className="text-xs text-[#2d2d2d] font-mono w-6 text-center">{item.qty}</span>
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-[#f5f3ef] text-[#999] hover:text-[#2d2d2d] text-sm">+</button>
+                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-1 bg-[#fef8f5] text-[#e05a33] border-[1px] border-[#e05a33] rounded text-xs px-2 py-1 hover:bg-[#e05a33] hover:text-white">Remove</button>
                   </div>
                 </div>
               ))}
@@ -118,8 +118,8 @@ export function NewTripForm() {
           </section>
         ))}
         <div className="flex gap-2 pt-2">
-          <button onClick={() => setStep('kits')} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-400">← Back</button>
-          <button onClick={handleSave} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Save trip →</button>
+          <button onClick={() => setStep('kits')} className="flex-1 py-2 rounded border-[1.5px] border-[#ddd] text-[#999]">← Back</button>
+          <button onClick={handleSave} className="flex-1 py-2 rounded bg-[#2d2d2d] text-white font-bold">Save trip →</button>
         </div>
       </div>
     )
@@ -128,45 +128,45 @@ export function NewTripForm() {
   // step === 'form'
   return (
     <div className="max-w-lg mx-auto p-6 space-y-4">
-      <h2 className="text-xl font-bold text-slate-100">New trip</h2>
+      <h2 className="text-xl font-bold text-[#2d2d2d]">New trip</h2>
 
       {settings.openRouterApiKey && (
         <div>
-          <label className="text-xs text-slate-400 uppercase tracking-wider">Describe your trip</label>
+          <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">Describe your trip</label>
           <textarea
             value={nlInput}
             onChange={e => setNlInput(e.target.value)}
             placeholder="5 days in Edinburgh, cold, one work dinner, carry-on..."
             rows={2}
-            className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 resize-none"
+            className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d] resize-none"
           />
           <button onClick={handleNlSubmit} disabled={nlLoading || !nlInput.trim()}
-            className="mt-1 w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold"
+            className="mt-1 w-full py-2 bg-[#2d2d2d] hover:bg-[#444] disabled:opacity-50 text-white rounded text-sm font-bold"
           >{nlLoading ? 'Generating...' : 'Generate from description →'}</button>
           {aiError && (
-            <div className="text-sm text-red-400 bg-red-950/50 rounded-lg px-3 py-2">
+            <div className="text-sm border-[1.5px] border-[#e05a33] bg-[#fef8f5] text-[#e05a33] rounded px-3 py-2">
               {aiError}
-              <button onClick={handleNlSubmit} className="ml-2 text-indigo-400 hover:text-indigo-300 underline">Try again</button>
+              <button onClick={handleNlSubmit} className="ml-2 text-[#e05a33] hover:underline">Try again</button>
             </div>
           )}
-          <p className="text-xs text-slate-600 mt-1 text-center">or fill in manually below</p>
+          <p className="text-xs text-[#999] mt-1 text-center">or fill in manually below</p>
         </div>
       )}
 
       <div>
-        <label className="text-xs text-slate-400 uppercase tracking-wider">Trip name</label>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Edinburgh Mar 26" className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" />
-        {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
+        <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">Trip name</label>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Edinburgh Mar 26" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
+        {errors.name && <p className="text-xs text-[#e05a33] mt-1">{errors.name}</p>}
       </div>
 
       <div>
-        <label className="text-xs text-slate-400 uppercase tracking-wider">Departure date</label>
-        <input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" />
-        {errors.date && <p className="text-xs text-red-400 mt-1">{errors.date}</p>}
+        <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">Departure date</label>
+        <input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
+        {errors.date && <p className="text-xs text-[#e05a33] mt-1">{errors.date}</p>}
       </div>
 
       <div>
-        <label className="text-xs text-slate-400 uppercase tracking-wider">Duration (days)</label>
+        <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">Duration (days)</label>
         <input
           type="text"
           inputMode="numeric"
@@ -179,9 +179,9 @@ export function NewTripForm() {
           }}
           onBlur={() => { if (profile.duration < 1) setProfile(p => ({ ...p, duration: 1 })) }}
           placeholder="5"
-          className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500"
+          className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]"
         />
-        {errors.duration && <p className="text-xs text-red-400 mt-1">{errors.duration}</p>}
+        {errors.duration && <p className="text-xs text-[#e05a33] mt-1">{errors.duration}</p>}
       </div>
 
       {([
@@ -190,18 +190,18 @@ export function NewTripForm() {
         { label: 'Mode', key: 'mode' as const, options: ['checked', 'carry-on', 'road-trip'] },
       ] as const).map(({ label, key, options }) => (
         <div key={key}>
-          <label className="text-xs text-slate-400 uppercase tracking-wider">{label}</label>
+          <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">{label}</label>
           <div className="flex gap-2 mt-1">
             {options.map(opt => (
               <button key={opt} onClick={() => setProfile(p => ({ ...p, [key]: opt }))}
-                className={`flex-1 py-1.5 rounded-lg text-sm capitalize ${profile[key] === opt ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                className={`flex-1 py-1.5 rounded text-sm capitalize ${profile[key] === opt ? 'bg-[#2d2d2d] text-white' : 'bg-white border-[1.5px] border-[#ddd] text-[#999]'}`}
               >{opt}</button>
             ))}
           </div>
         </div>
       ))}
 
-      <button onClick={handleGenerate} disabled={!name.trim() || !departureDate || profile.duration < 1} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold">Generate list →</button>
+      <button onClick={handleGenerate} disabled={!name.trim() || !departureDate || profile.duration < 1} className="w-full py-3 bg-[#2d2d2d] hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded font-bold">Generate list →</button>
     </div>
   )
 }
