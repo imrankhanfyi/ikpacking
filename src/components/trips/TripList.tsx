@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom'
 import { SuggestionBanner } from './SuggestionBanner'
 
 export function TripList() {
-  const active = useStore(s => s.getActiveTrips())
-  const past = useStore(s => s.getCompletedTrips())
+  const trips = useStore(s => s.trips)
+  const active = trips.filter(t => !t.completedAt).sort((a, b) => a.departureDate.localeCompare(b.departureDate))
+  const past = trips.filter(t => t.completedAt).sort((a, b) => b.departureDate.localeCompare(a.departureDate))
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">

@@ -11,7 +11,7 @@ export function NotionImport() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const settings = useStore(s => s.settings)
-  const masterItems = useStore(s => s.getActiveItems())
+  const masterItems = useStore(s => s.masterItems).filter(i => !i.deletedAt)
   const addMasterItem = useStore(s => s.addMasterItem)
 
   async function handleParse() {

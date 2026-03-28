@@ -4,7 +4,7 @@ import type { Kit, KitItem } from '../../types'
 import { Modal } from '../common/Modal'
 
 export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void }) {
-  const masterItems = useStore(s => s.getActiveItems())
+  const masterItems = useStore(s => s.masterItems).filter(i => !i.deletedAt)
   const addKit = useStore(s => s.addKit)
   const updateKit = useStore(s => s.updateKit)
 
