@@ -17,23 +17,23 @@ export function PackingItem({ item, onToggle, onQtyChange, onRemove, onRestore }
   }
 
   return (
-    <div className={`flex items-center gap-3 py-2 border-b border-slate-800 min-h-[44px] ${item.isPacked ? 'opacity-40' : ''}`}>
+    <div className={`flex items-center gap-3 py-2 border-b border-[#eee] min-h-[44px] ${item.isPacked ? 'opacity-40' : ''}`}>
       <button
         onClick={onToggle}
-        className={`w-6 h-6 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-          item.isPacked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-600 hover:border-slate-400'
+        className={`w-6 h-6 rounded-[2px] border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
+          item.isPacked ? 'bg-[#2d2d2d] border-[#2d2d2d] text-white' : 'border-[#ddd] hover:border-[#2d2d2d]'
         }`}
       >
         {item.isPacked && '✓'}
       </button>
-      <span className={`text-sm flex-1 min-w-0 truncate ${item.isPacked ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+      <span className={`text-sm flex-1 min-w-0 truncate ${item.isPacked ? 'line-through text-[#ccc]' : 'text-[#2d2d2d]'}`}>
         {item.name}
       </span>
       <QtyBadge qty={item.qty} onEdit={onQtyChange} compact />
       <button
         onClick={handleRemove}
         aria-label={`Remove ${item.name}`}
-        className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-red-950 text-red-400 hover:bg-red-900 text-xs"
+        className="shrink-0 w-8 h-8 flex items-center justify-center rounded-[2px] border-[1.5px] border-[#eee] text-[#ccc] hover:border-[#e05a33] hover:text-[#e05a33] text-xs"
       >
         ✕
       </button>

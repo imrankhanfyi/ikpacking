@@ -18,7 +18,7 @@ export function PackingColumn({ categories, items, onToggle, onQtyChange, onRemo
         if (catItems.length === 0) return null
         return (
           <section key={cat}>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">{cat}</h3>
+            <h3 className="font-mono text-[10px] uppercase tracking-[3px] text-[#999] border-b-[1.5px] border-[#2d2d2d] pb-1 mb-2">{cat}</h3>
             {catItems.map(item => (
               <PackingItem key={item.id} item={item}
                 onToggle={() => onToggle(item.id)}

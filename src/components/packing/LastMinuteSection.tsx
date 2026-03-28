@@ -22,24 +22,24 @@ export function LastMinuteSection({ items, onToggle, tripId }: Props) {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-amber-900/50 bg-amber-950/20 p-4">
+    <div className="mt-6 border-[1.5px] border-[#e05a33] rounded bg-[#fef8f5] p-4">
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-amber-500">Last-minute</h3>
-        <span className="text-xs text-slate-600">pack when you're done using them</span>
+        <h3 className="font-mono text-[10px] uppercase tracking-[3px] text-[#e05a33] font-bold">Last-minute</h3>
+        <span className="text-xs text-[#999]">pack when you're done using them</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {items.map(item => (
           <button key={item.id} onClick={() => onToggle(item.id)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm text-left transition-colors min-h-[44px] ${
-              item.isEssential ? 'border-amber-800 bg-amber-950/50' : 'border-slate-700 bg-slate-900'
-            } ${item.isPacked ? 'opacity-40' : ''}`}
+            className={`flex items-center gap-2 rounded text-sm text-left transition-colors min-h-[44px] ${
+              item.isPacked ? 'border-[1.5px] border-[#e05a33] bg-[#e05a33] text-white px-3 py-2.5 opacity-40' : 'border-[1.5px] border-[#e05a33] text-[#e05a33] px-3 py-2.5'
+            }`}
           >
-            <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center text-[10px] ${
-              item.isPacked ? 'bg-indigo-600 border-indigo-600 text-white' : item.isEssential ? 'border-amber-700' : 'border-slate-600'
+            <span className={`w-4 h-4 rounded-[2px] border-[1.5px] flex-shrink-0 flex items-center justify-center text-[10px] ${
+              item.isPacked ? 'bg-[#e05a33] border-[#e05a33] text-white' : item.isEssential ? 'border-[#e05a33]' : 'border-[#ddd]'
             }`}>
               {item.isPacked && '✓'}
             </span>
-            <span className={item.isPacked ? 'line-through text-slate-500' : 'text-slate-300'}>{item.name}</span>
+            <span className={item.isPacked ? 'line-through' : ''}>{item.name}</span>
           </button>
         ))}
       </div>
@@ -49,11 +49,11 @@ export function LastMinuteSection({ items, onToggle, tripId }: Props) {
             <input value={newName} onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAdding(false) }}
               placeholder="Item name..." autoFocus
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" />
-            <button onClick={handleAdd} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm">Add</button>
+              className="flex-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-sm text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
+            <button onClick={handleAdd} className="px-3 py-2 bg-[#2d2d2d] text-white rounded text-sm">Add</button>
           </div>
         ) : (
-          <button onClick={() => setAdding(true)} className="text-sm text-amber-500 hover:text-amber-400">+ Add last-minute item</button>
+          <button onClick={() => setAdding(true)} className="text-[#e05a33] font-mono text-[11px] uppercase tracking-[2px] hover:opacity-70">+ Add last-minute item</button>
         )}
       </div>
     </div>
