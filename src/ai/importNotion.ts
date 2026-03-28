@@ -24,5 +24,9 @@ export async function importNotionList(apiKey: string, markdown: string): Promis
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: markdown },
   ])
-  return JSON.parse(raw.trim())
+  try {
+    return JSON.parse(raw.trim())
+  } catch {
+    throw new Error('Failed to parse AI response as JSON. Try again with a simpler list.')
+  }
 }
