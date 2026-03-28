@@ -22,6 +22,8 @@ export function NewTripForm() {
   const settings = useStore(s => s.settings)
   const [nlInput, setNlInput] = useState('')
   const [nlLoading, setNlLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [aiError, setAiError] = useState('')
 
   const [generatedItems, setGeneratedItems] = useState(() => generateTripItems(masterItems, DEFAULT_PROFILE))
   const [activeKitIds, setActiveKitIds] = useState<string[]>([])
@@ -29,6 +31,7 @@ export function NewTripForm() {
   async function handleNlSubmit() {
     if (!nlInput.trim() || !settings.openRouterApiKey) return
     setNlLoading(true)
+    setAiError('')
     try {
       const parsed = await parseTripDescription(settings.openRouterApiKey, nlInput)
       const items = generateTripItems(masterItems, parsed)
@@ -36,15 +39,20 @@ export function NewTripForm() {
       setName(parsed.name)
       setGeneratedItems(items)
       setStep('kits')
-    } catch (e) {
-      console.error('AI parsing failed:', e)
-      alert('AI parsing failed — fill in manually below.')
+    } catch (e: any) {
+      setAiError(e.message || 'AI parsing failed. Fill in manually below.')
     } finally {
       setNlLoading(false)
     }
   }
 
   function handleGenerate() {
+    const errs: Record<string, string> = {}
+    if (!name.trim() && !nlInput.trim()) errs.name = 'Trip name is required'
+    if (!departureDate) errs.date = 'Departure date is required'
+    if (profile.duration < 1) errs.duration = 'Duration must be at least 1 day'
+    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    setErrors({})
     const items = generateTripItems(masterItems, profile)
     setGeneratedItems(items)
     setStep('kits')
@@ -136,6 +144,12 @@ export function NewTripForm() {
           <button onClick={handleNlSubmit} disabled={nlLoading || !nlInput.trim()}
             className="mt-1 w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold"
           >{nlLoading ? 'Generating...' : 'Generate from description →'}</button>
+          {aiError && (
+            <div className="text-sm text-red-400 bg-red-950/50 rounded-lg px-3 py-2">
+              {aiError}
+              <button onClick={handleNlSubmit} className="ml-2 text-indigo-400 hover:text-indigo-300 underline">Try again</button>
+            </div>
+          )}
           <p className="text-xs text-slate-600 mt-1 text-center">or fill in manually below</p>
         </div>
       )}
@@ -143,11 +157,13 @@ export function NewTripForm() {
       <div>
         <label className="text-xs text-slate-400 uppercase tracking-wider">Trip name</label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Edinburgh Mar 26" className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" />
+        {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name}</p>}
       </div>
 
       <div>
         <label className="text-xs text-slate-400 uppercase tracking-wider">Departure date</label>
         <input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" />
+        {errors.date && <p className="text-xs text-red-400 mt-1">{errors.date}</p>}
       </div>
 
       <div>
@@ -166,6 +182,7 @@ export function NewTripForm() {
           placeholder="5"
           className="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500"
         />
+        {errors.duration && <p className="text-xs text-red-400 mt-1">{errors.duration}</p>}
       </div>
 
       {[
@@ -185,7 +202,7 @@ export function NewTripForm() {
         </div>
       ))}
 
-      <button onClick={handleGenerate} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold">Generate list →</button>
+      <button onClick={handleGenerate} disabled={!name.trim() || !departureDate || profile.duration < 1} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold">Generate list →</button>
     </div>
   )
 }
