@@ -67,7 +67,7 @@ export function buildSeedKits(items: MasterItem[]): Kit[] {
       id: uuid(),
       name: 'International',
       items: [
-        { masterItemId: find('Laptop'), qty: 1, swapsItemId: find('Laptop') },
+        { masterItemId: find('Laptop'), qty: 1 },
       ],
     },
     {
