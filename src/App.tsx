@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useStore } from './store'
 import { Onboarding } from './components/Onboarding'
 import { TripList } from './components/trips/TripList'
@@ -33,6 +33,7 @@ export default function App() {
             <Route path="/trip/new" element={<NewTripForm />} />
             <Route path="/trip/:id" element={<PackingView />} />
             <Route path="/manage" element={<ManageLayout />}>
+              <Route index element={<Navigate to="items" replace />} />
               <Route path="items" element={<MasterListView />} />
               <Route path="kits" element={<KitsView />} />
               <Route path="tags" element={<TagsView />} />

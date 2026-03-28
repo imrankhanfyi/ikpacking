@@ -10,6 +10,8 @@ export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: 
   const addMasterItem = useStore(s => s.addMasterItem)
   const updateMasterItem = useStore(s => s.updateMasterItem)
 
+  const [nameError, setNameError] = useState(false)
+
   const [form, setForm] = useState({
     name: item?.name ?? '',
     category: item?.category ?? 'Misc',
@@ -21,7 +23,8 @@ export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: 
   })
 
   function handleSave() {
-    if (!form.name.trim()) return
+    if (!form.name.trim()) { setNameError(true); return }
+    setNameError(false)
     if (item) updateMasterItem(item.id, form)
     else addMasterItem(form)
     onClose()
@@ -34,7 +37,8 @@ export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: 
   return (
     <Modal title={item ? 'Edit item' : 'Add item'} onClose={onClose}>
       <div className="space-y-3">
-        <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Item name" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" />
+        <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setNameError(false) }} placeholder="Item name" className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 ${nameError ? 'border-red-500' : 'border-slate-700'}`} />
+        {nameError && <p className="text-xs text-red-400">Name is required</p>}
 
         <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none">
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}

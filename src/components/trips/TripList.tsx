@@ -24,6 +24,10 @@ export function TripList() {
         <p className="text-slate-500 text-center py-12">No trips yet. <Link to="/trip/new" className="text-indigo-400 underline">Plan one.</Link></p>
       )}
 
+      {active.length === 0 && past.length > 0 && (
+        <p className="text-slate-500 text-center py-6">All packed! <Link to="/trip/new" className="text-indigo-400 underline">Plan your next trip.</Link></p>
+      )}
+
       {active.length > 0 && (
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Upcoming</h2>

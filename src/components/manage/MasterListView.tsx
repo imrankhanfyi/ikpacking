@@ -49,6 +49,10 @@ export function MasterListView() {
         </section>
       ))}
 
+      {filter && Object.keys(grouped).length === 0 && (
+        <p className="text-sm text-slate-500 text-center py-6">No items match "{filter}".</p>
+      )}
+
       {editing && <ItemForm item={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
     </div>
   )

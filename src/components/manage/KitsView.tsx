@@ -46,6 +46,9 @@ export function KitsView() {
           </div>
         </div>
       ))}
+      {kits.length === 0 && (
+        <p className="text-sm text-slate-500 text-center py-6">No kits yet. Create one to group items for specific trip types.</p>
+      )}
       {editing && <KitForm kit={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
     </div>
   )
