@@ -16,12 +16,12 @@ export function TagsView() {
 
   return (
     <div className="space-y-2">
-      <h2 className="text-sm font-semibold text-slate-300 mb-4">All tags</h2>
+      <h2 className="text-sm font-semibold text-[#2d2d2d] mb-4">All tags</h2>
       {Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(([tag, count]) => (
-        <div key={tag} className="flex items-center gap-3 py-2 border-b border-slate-800">
-          <span className="flex-1 text-sm text-slate-200">{tag}</span>
-          <span className="text-xs text-slate-500">{count} items</span>
-          <button onClick={() => handleRename(tag)} className="text-xs text-slate-600 hover:text-indigo-400">rename</button>
+        <div key={tag} className="flex items-center gap-3 py-2 border-b border-[#eee]">
+          <span className="flex-1 text-sm text-[#2d2d2d]">{tag}</span>
+          <span className="text-xs text-[#999] font-mono">{count} items</span>
+          <button onClick={() => handleRename(tag)} className="text-xs text-[#ccc] hover:text-[#e05a33]">rename</button>
         </div>
       ))}
     </div>

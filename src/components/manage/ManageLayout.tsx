@@ -14,15 +14,15 @@ export function ManageLayout() {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="flex items-center gap-4 mb-4 sm:mb-6">
-        <NavLink to="/" className="text-xs text-slate-500 hover:text-slate-300">← Trips</NavLink>
-        <h1 className="text-xl font-bold text-slate-100">Manage</h1>
+        <NavLink to="/" className="text-[#e05a33] font-mono text-[11px] uppercase tracking-[2px]">← Trips</NavLink>
+        <h1 className="text-xl font-bold text-[#2d2d2d]">Manage</h1>
       </div>
 
       {/* Mobile: horizontal scrollable tabs */}
       <nav className="sm:hidden flex gap-2 overflow-x-auto pb-3 mb-4 -mx-4 px-4 scrollbar-none">
         {links.map(l => (
           <NavLink key={l.to} to={l.to}
-            className={({ isActive }) => `shrink-0 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-800 text-slate-400'}`}
+            className={({ isActive }) => `shrink-0 px-3 py-1.5 rounded text-sm whitespace-nowrap transition-colors ${isActive ? 'bg-[#2d2d2d] text-white' : 'bg-white border-[1.5px] border-[#ddd] text-[#999]'}`}
           >{l.label}</NavLink>
         ))}
       </nav>
@@ -32,7 +32,7 @@ export function ManageLayout() {
         <nav className="hidden sm:block w-40 flex-shrink-0 space-y-1">
           {links.map(l => (
             <NavLink key={l.to} to={l.to}
-              className={({ isActive }) => `block px-3 py-2 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-900 text-indigo-200' : 'text-slate-400 hover:text-slate-200'}`}
+              className={({ isActive }) => `block px-3 py-2 rounded text-sm transition-colors ${isActive ? 'bg-[#f5f3ef] text-[#2d2d2d] border-l-[2px] border-[#e05a33]' : 'text-[#999] hover:text-[#2d2d2d]'}`}
             >{l.label}</NavLink>
           ))}
         </nav>

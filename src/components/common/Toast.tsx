@@ -13,12 +13,12 @@ export function ToastContainer() {
         <div
           key={t.id}
           role="alert"
-          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm max-w-sm w-full animate-[slideUp_0.2s_ease-out] ${
+          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded text-sm max-w-sm w-full animate-[slideUp_0.2s_ease-out] ${
             t.type === 'error'
-              ? 'bg-red-950 border border-red-800 text-red-200'
+              ? 'bg-[#fef8f5] border-[1.5px] border-[#e05a33] text-[#e05a33]'
               : t.type === 'undo'
-              ? 'bg-slate-800 border border-slate-600 text-slate-200'
-              : 'bg-green-950 border border-green-800 text-green-200'
+              ? 'bg-white border-[1.5px] border-[#2d2d2d] text-[#2d2d2d]'
+              : 'bg-[#f0f7f3] border-[1.5px] border-[#2a6e4e] text-[#2a6e4e]'
           }`}
         >
           <span className="flex-1">{t.message}</span>
@@ -28,7 +28,7 @@ export function ToastContainer() {
                 t.onUndo!()
                 removeToast(t.id)
               }}
-              className="shrink-0 px-2 py-1 rounded bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500"
+              className="shrink-0 px-2 py-1 rounded bg-[#2d2d2d] text-white text-xs font-semibold"
             >
               Undo
             </button>
