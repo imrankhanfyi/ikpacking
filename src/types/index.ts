@@ -62,6 +62,8 @@ export interface Trip {
 
 export interface AppSettings {
   openRouterApiKey: string
+  syncToken: string
+  syncUrl: string
   hasCompletedOnboarding: boolean
 }
 

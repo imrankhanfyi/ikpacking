@@ -65,7 +65,7 @@ export const useStore = create<AppStore>()(
       masterItems: seedItems,
       kits: buildSeedKits(seedItems),
       trips: [],
-      settings: { openRouterApiKey: '', hasCompletedOnboarding: false },
+      settings: { openRouterApiKey: '', syncToken: '', syncUrl: '', hasCompletedOnboarding: false },
       pendingSuggestions: [],
 
       addMasterItem: (item) => set(s => ({
@@ -213,7 +213,7 @@ export const useStore = create<AppStore>()(
           masterItems: data.masterItems ?? [],
           kits: data.kits ?? [],
           trips: data.trips ?? [],
-          settings: data.settings ?? { openRouterApiKey: '', hasCompletedOnboarding: false },
+          settings: data.settings ?? { openRouterApiKey: '', syncToken: '', syncUrl: '', hasCompletedOnboarding: false },
         })
       },
 
