@@ -11,11 +11,11 @@ export const CATEGORY_LAYOUT = {
 export const ITEM_TAGS = ['always', 'cold-weather', 'warm-weather', 'business', 'leisure'] as const
 
 export const TAG_COLORS: Record<string, string> = {
-  always: 'bg-slate-700 text-slate-300',
-  'cold-weather': 'bg-blue-900 text-blue-300',
-  'warm-weather': 'bg-amber-900 text-amber-300',
-  business: 'bg-violet-900 text-violet-300',
-  leisure: 'bg-green-900 text-green-300',
+  always: 'bg-[#f5f3ef] text-[#999] border border-[#ddd]',
+  'cold-weather': 'bg-[#eef4f8] text-[#4a7fa5] border border-[#c5d9e8]',
+  'warm-weather': 'bg-[#fef8f0] text-[#b07d3a] border border-[#e8d5b5]',
+  business: 'bg-[#f3f0f8] text-[#6b5b8a] border border-[#d5cee5]',
+  leisure: 'bg-[#f0f7f3] text-[#4a7f5e] border border-[#c5e0ce]',
 }
 
 export const WEATHER_TAGS: Record<string, string[]> = {

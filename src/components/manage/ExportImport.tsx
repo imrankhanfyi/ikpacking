@@ -33,14 +33,14 @@ export function ExportImport() {
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="text-sm font-semibold text-slate-300 mb-2">Export backup</h3>
-        <p className="text-xs text-slate-500 mb-3">Downloads all your master items, kits, and trip history as a JSON file.</p>
-        <button onClick={handleExport} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm">Download backup</button>
+        <h3 className="text-sm font-semibold text-[#2d2d2d] mb-2">Export backup</h3>
+        <p className="text-xs text-[#999] mb-3">Downloads all your master items, kits, and trip history as a JSON file.</p>
+        <button onClick={handleExport} className="px-4 py-2 border-[1.5px] border-[#ddd] text-[#2d2d2d] hover:border-[#2d2d2d] rounded text-sm">Download backup</button>
       </section>
       <section>
-        <h3 className="text-sm font-semibold text-slate-300 mb-2">Import backup</h3>
-        <p className="text-xs text-slate-500 mb-3">Restores from a previously exported JSON file. This replaces all current data.</p>
-        <label className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm cursor-pointer">
+        <h3 className="text-sm font-semibold text-[#2d2d2d] mb-2">Import backup</h3>
+        <p className="text-xs text-[#999] mb-3">Restores from a previously exported JSON file. This replaces all current data.</p>
+        <label className="px-4 py-2 border-[1.5px] border-[#ddd] text-[#2d2d2d] hover:border-[#2d2d2d] rounded text-sm cursor-pointer">
           Choose file <input type="file" accept=".json" onChange={handleImport} className="hidden" />
         </label>
       </section>

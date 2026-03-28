@@ -4,8 +4,8 @@
   "description": "A smarter packing list with kits and AI suggestions",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#fefefe",
+  "theme_color": "#fefefe",
   "icons": [
     {
       "src": "/icon-192.png",

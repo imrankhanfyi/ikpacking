@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { Trip } from '../../types'
-import { ProgressBar } from '../common/ProgressBar'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store'
 import { toastUndo } from '../../store/toastStore'
@@ -56,8 +55,13 @@ export function TripCard({ trip }: { trip: Trip }) {
   return (
     <div
       onClick={() => !editing && navigate(`/trip/${trip.id}`)}
-      className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-600 transition-colors cursor-pointer"
+      className={`border-[1.5px] rounded p-4 transition-colors cursor-pointer relative ${isComplete ? 'border-[#ddd]' : 'border-[#2d2d2d] hover:border-[#e05a33]'}`}
     >
+      {/* Status badge */}
+      <span className={`absolute top-[-1px] right-3 font-mono text-[9px] font-bold tracking-[1px] px-2 py-0.5 ${isComplete ? 'bg-[#2a6e4e] text-white' : 'bg-[#e05a33] text-white'}`}>
+        {isComplete ? 'DONE' : 'PACKING'}
+      </span>
+
       <div className="flex items-start justify-between mb-2">
         <div className="min-w-0 flex-1">
           {editing ? (
@@ -68,23 +72,27 @@ export function TripCard({ trip }: { trip: Trip }) {
               onBlur={commitRename}
               onClick={(e) => e.stopPropagation()}
               autoFocus
-              className="w-full bg-slate-800 border border-indigo-500 rounded px-2 py-1 text-sm text-slate-100 focus:outline-none"
+              className="w-full bg-white border-[1.5px] border-[#2d2d2d] rounded px-2 py-1 text-sm text-[#2d2d2d] focus:outline-none"
             />
           ) : (
-            <h3 className="font-semibold text-slate-100 truncate">{trip.name}</h3>
+            <h3 className={`font-bold tracking-tight truncate ${isComplete ? 'text-[#999]' : 'text-[#2d2d2d]'}`}>{trip.name}</h3>
           )}
-          <p className="text-xs text-slate-500 mt-0.5">{trip.departureDate} · {trip.profile.duration}d · {trip.profile.weather} · {trip.profile.type}</p>
+          <p className="font-mono text-[11px] uppercase tracking-[1px] text-[#999] mt-0.5">{trip.departureDate} · {trip.profile.duration}d · {trip.profile.weather} · {trip.profile.type}</p>
         </div>
         <div className="flex items-center gap-2 ml-3 shrink-0">
-          <button onClick={handleDuplicate} className="text-xs text-slate-600 hover:text-indigo-400">copy</button>
-          <button onClick={handleRename} className="text-xs text-slate-600 hover:text-indigo-400">rename</button>
-          <button onClick={handleDelete} className="text-xs text-slate-600 hover:text-red-400">del</button>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${isComplete ? 'bg-slate-800 text-slate-500' : 'bg-indigo-900 text-indigo-300'}`}>
-            {isComplete ? 'done' : 'packing'}
-          </span>
+          <button onClick={handleDuplicate} className="font-mono text-[10px] uppercase tracking-[1px] text-[#ccc] hover:text-[#e05a33]">copy</button>
+          <button onClick={handleRename} className="font-mono text-[10px] uppercase tracking-[1px] text-[#ccc] hover:text-[#e05a33]">rename</button>
+          <button onClick={handleDelete} className="font-mono text-[10px] uppercase tracking-[1px] text-[#ccc] hover:text-[#e05a33]">del</button>
         </div>
       </div>
-      {isActive && <ProgressBar packed={packed.length} total={included.length} />}
+      {isActive && (
+        <div className="flex items-center gap-1 mt-2">
+          {Array.from({ length: included.length }, (_, i) => (
+            <span key={i} className={`w-3 h-3 border-[1.5px] rounded-[2px] ${i < packed.length ? 'border-[#2d2d2d] bg-[#e05a33]' : 'border-[#ddd]'}`} />
+          ))}
+          <span className="ml-2 font-mono text-[10px] text-[#999]">{packed.length} / {included.length}</span>
+        </div>
+      )}
     </div>
   )
 }

@@ -43,43 +43,43 @@ export function NotionImport() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-slate-300">Import from Notion</h3>
-      <p className="text-xs text-slate-500">Paste one or more Notion packing lists (markdown format). The AI will parse them, deduplicate, and let you review before importing.</p>
+      <h3 className="text-sm font-semibold text-[#2d2d2d]">Import from Notion</h3>
+      <p className="text-xs text-[#999]">Paste one or more Notion packing lists (markdown format). The AI will parse them, deduplicate, and let you review before importing.</p>
 
       {!parsed && (
         <>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <textarea value={markdown} onChange={e => setMarkdown(e.target.value)} placeholder="Paste Notion packing list markdown here..." rows={12} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm font-mono focus:outline-none focus:border-indigo-500 resize-y" />
-          <button onClick={handleParse} disabled={loading || !markdown.trim()} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold">
+          {error && <p className="text-sm text-[#e05a33]">{error}</p>}
+          <textarea value={markdown} onChange={e => setMarkdown(e.target.value)} placeholder="Paste Notion packing list markdown here..." rows={12} className="w-full font-mono bg-white border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded px-3 py-2 text-sm focus:border-[#2d2d2d] focus:outline-none resize-y" />
+          <button onClick={handleParse} disabled={loading || !markdown.trim()} className="w-full py-2 bg-[#2d2d2d] disabled:opacity-50 text-white rounded text-sm font-bold">
             {loading ? 'Parsing...' : 'Parse with AI →'}
           </button>
         </>
       )}
 
       {parsed && parsed.length === 0 && (
-        <p className="text-sm text-slate-500">No items found in that file.</p>
+        <p className="text-sm text-[#999]">No items found in that file.</p>
       )}
 
       {parsed && parsed.length > 0 && (
         <>
-          <p className="text-xs text-slate-400">{parsed.length} items found. {selected.size} selected to import.</p>
+          <p className="text-xs text-[#999]">{parsed.length} items found. {selected.size} selected to import.</p>
           <div className="space-y-1 max-h-96 overflow-y-auto">
             {parsed.map((item, i) => (
-              <label key={i} className={`flex items-center gap-3 py-2 border-b border-slate-800 cursor-pointer ${item.isDuplicate ? 'opacity-50' : ''}`}>
+              <label key={i} className={`flex items-center gap-3 py-2 border-b border-[#eee] cursor-pointer ${item.isDuplicate ? 'opacity-50' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onChange={e => {
                   const s = new Set(selected)
                   e.target.checked ? s.add(i) : s.delete(i)
                   setSelected(s)
                 }} />
-                <span className="flex-1 text-sm text-slate-200">{item.name}</span>
-                <span className="text-xs text-slate-500">{item.category}</span>
-                {item.isDuplicate && <span className="text-xs text-amber-500">possible duplicate</span>}
+                <span className="flex-1 text-sm text-[#2d2d2d]">{item.name}</span>
+                <span className="text-xs text-[#999]">{item.category}</span>
+                {item.isDuplicate && <span className="text-xs text-[#e05a33]">possible duplicate</span>}
               </label>
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setParsed(null)} className="px-4 py-2 bg-slate-800 text-slate-400 rounded-lg text-sm">← Back</button>
-            <button onClick={handleImport} disabled={selected.size === 0} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-semibold">Import {selected.size} items</button>
+            <button onClick={() => setParsed(null)} className="px-4 py-2 bg-[#f5f3ef] text-[#999] rounded text-sm">← Back</button>
+            <button onClick={handleImport} disabled={selected.size === 0} className="flex-1 py-2 bg-[#2d2d2d] disabled:opacity-50 text-white rounded text-sm font-bold">Import {selected.size} items</button>
           </div>
         </>
       )}

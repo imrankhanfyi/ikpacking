@@ -35,44 +35,44 @@ export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: 
   return (
     <Modal title={item ? 'Edit item' : 'Add item'} onClose={onClose}>
       <div className="space-y-3">
-        <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setNameError(false) }} placeholder="Item name" className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 ${nameError ? 'border-red-500' : 'border-slate-700'}`} />
-        {nameError && <p className="text-xs text-red-400">Name is required</p>}
+        <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setNameError(false) }} placeholder="Item name" className={`w-full bg-white border-[1.5px] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d] ${nameError ? 'border-[#e05a33]' : 'border-[#ddd]'}`} />
+        {nameError && <p className="text-xs text-[#e05a33]">Name is required</p>}
 
-        <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none">
+        <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d]">
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
 
         <div>
-          <p className="text-xs text-slate-500 mb-1">Tags</p>
+          <p className="text-xs text-[#999] mb-1">Tags</p>
           <div className="flex flex-wrap gap-1">
             {ITEM_TAGS.map(tag => (
               <button key={tag} onClick={() => toggleTag(tag)}
-                className={`text-xs px-2 py-1 rounded-full ${form.tags.includes(tag) ? 'bg-indigo-700 text-indigo-200' : 'bg-slate-700 text-slate-400'}`}
+                className={`text-xs px-2 py-1 rounded ${form.tags.includes(tag) ? 'bg-[#2d2d2d] text-white' : 'bg-white border-[1.5px] border-[#ddd] text-[#999]'}`}
               >{tag}</button>
             ))}
           </div>
         </div>
 
         <div className="flex gap-2">
-          <input type="number" min={1} value={form.defaultQty} onChange={e => setForm(f => ({ ...f, defaultQty: Number(e.target.value) }))} className="w-20 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none" />
-          <select value={form.qtyBasis} onChange={e => setForm(f => ({ ...f, qtyBasis: e.target.value as 'fixed' | 'per-day' }))} className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none">
+          <input type="number" min={1} value={form.defaultQty} onChange={e => setForm(f => ({ ...f, defaultQty: Number(e.target.value) }))} className="w-20 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d]" />
+          <select value={form.qtyBasis} onChange={e => setForm(f => ({ ...f, qtyBasis: e.target.value as 'fixed' | 'per-day' }))} className="flex-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d]">
             <option value="fixed">fixed quantity</option>
             <option value="per-day">per day (×duration)</option>
           </select>
         </div>
 
         <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-[#2d2d2d] cursor-pointer">
             <input type="checkbox" checked={form.isLastMinute} onChange={e => setForm(f => ({ ...f, isLastMinute: e.target.checked }))} className="rounded" />
             Last-minute
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-[#2d2d2d] cursor-pointer">
             <input type="checkbox" checked={form.isEssential} onChange={e => setForm(f => ({ ...f, isEssential: e.target.checked }))} className="rounded" />
             Essential
           </label>
         </div>
 
-        <button onClick={handleSave} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold">Save</button>
+        <button onClick={handleSave} className="w-full py-2 bg-[#2d2d2d] text-white rounded text-sm font-bold">Save</button>
       </div>
     </Modal>
   )
