@@ -32,6 +32,7 @@ export function PackingItem({ item, onToggle, onQtyChange, onRemove, onRestore }
       <QtyBadge qty={item.qty} onEdit={onQtyChange} compact />
       <button
         onClick={handleRemove}
+        aria-label={`Remove ${item.name}`}
         className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-red-950 text-red-400 hover:bg-red-900 text-xs"
       >
         ✕

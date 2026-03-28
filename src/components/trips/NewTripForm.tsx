@@ -14,8 +14,7 @@ export function NewTripForm() {
   const [name, setName] = useState('')
   const [departureDate, setDepartureDate] = useState('')
   const [step, setStep] = useState<'form' | 'kits' | 'review'>('form')
-  const allItems = useStore(s => s.masterItems)
-  const masterItems = allItems.filter(i => !i.deletedAt)
+  const masterItems = useStore(s => s.getActiveItems())
   const kits = useStore(s => s.kits)
   const addTrip = useStore(s => s.addTrip)
   const navigate = useNavigate()
@@ -39,8 +38,8 @@ export function NewTripForm() {
       setName(parsed.name)
       setGeneratedItems(items)
       setStep('kits')
-    } catch (e: any) {
-      setAiError(e.message || 'AI parsing failed. Fill in manually below.')
+    } catch (e: unknown) {
+      setAiError(e instanceof Error ? e.message : 'AI parsing failed. Fill in manually below.')
     } finally {
       setNlLoading(false)
     }
@@ -185,17 +184,17 @@ export function NewTripForm() {
         {errors.duration && <p className="text-xs text-red-400 mt-1">{errors.duration}</p>}
       </div>
 
-      {[
-        { label: 'Weather', key: 'weather', options: ['cold', 'warm', 'mixed'] },
-        { label: 'Type', key: 'type', options: ['business', 'leisure', 'mixed'] },
-        { label: 'Mode', key: 'mode', options: ['checked', 'carry-on', 'road-trip'] },
-      ].map(({ label, key, options }) => (
+      {([
+        { label: 'Weather', key: 'weather' as const, options: ['cold', 'warm', 'mixed'] },
+        { label: 'Type', key: 'type' as const, options: ['business', 'leisure', 'mixed'] },
+        { label: 'Mode', key: 'mode' as const, options: ['checked', 'carry-on', 'road-trip'] },
+      ] as const).map(({ label, key, options }) => (
         <div key={key}>
           <label className="text-xs text-slate-400 uppercase tracking-wider">{label}</label>
           <div className="flex gap-2 mt-1">
             {options.map(opt => (
               <button key={opt} onClick={() => setProfile(p => ({ ...p, [key]: opt }))}
-                className={`flex-1 py-1.5 rounded-lg text-sm capitalize ${(profile as any)[key] === opt ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm capitalize ${profile[key] === opt ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
               >{opt}</button>
             ))}
           </div>

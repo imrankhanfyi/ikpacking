@@ -1,16 +1,5 @@
 import type { MasterItem, TripProfile } from '../types'
-
-const WEATHER_TAGS: Record<string, string[]> = {
-  cold: ['cold-weather'],
-  warm: ['warm-weather'],
-  mixed: ['cold-weather', 'warm-weather'],
-}
-
-const TYPE_TAGS: Record<string, string[]> = {
-  business: ['business'],
-  leisure: ['leisure'],
-  mixed: ['business', 'leisure'],
-}
+import { WEATHER_TAGS, TYPE_TAGS } from '../constants'
 
 export function filterItemsByProfile(items: MasterItem[], profile: TripProfile): MasterItem[] {
   const allowedTags = new Set([

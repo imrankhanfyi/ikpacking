@@ -6,8 +6,7 @@ import { toastUndo } from '../../store/toastStore'
 
 export function KitsView() {
   const kits = useStore(s => s.kits)
-  const allItems = useStore(s => s.masterItems)
-  const masterItems = allItems.filter(i => !i.deletedAt)
+  const masterItems = useStore(s => s.getActiveItems())
   const deleteKit = useStore(s => s.deleteKit)
   const addKit = useStore(s => s.addKit)
   const [editing, setEditing] = useState<Kit | null | 'new'>(null)

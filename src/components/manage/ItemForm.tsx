@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../../store'
 import type { MasterItem } from '../../types'
 import { Modal } from '../common/Modal'
-
-const CATEGORIES = ['Toiletries', 'Meds', 'Clothing', 'Electronics', 'Misc']
-const COMMON_TAGS = ['always', 'cold-weather', 'warm-weather', 'business', 'leisure']
+import { CATEGORIES, ITEM_TAGS } from '../../constants'
 
 export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: () => void }) {
   const addMasterItem = useStore(s => s.addMasterItem)
@@ -47,7 +45,7 @@ export function ItemForm({ item, onClose }: { item: MasterItem | null; onClose: 
         <div>
           <p className="text-xs text-slate-500 mb-1">Tags</p>
           <div className="flex flex-wrap gap-1">
-            {COMMON_TAGS.map(tag => (
+            {ITEM_TAGS.map(tag => (
               <button key={tag} onClick={() => toggleTag(tag)}
                 className={`text-xs px-2 py-1 rounded-full ${form.tags.includes(tag) ? 'bg-indigo-700 text-indigo-200' : 'bg-slate-700 text-slate-400'}`}
               >{tag}</button>
