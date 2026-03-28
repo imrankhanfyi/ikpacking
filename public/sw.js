@@ -1,4 +1,6 @@
-const CACHE_NAME = 'pack-v2'
+// Cache name derived from SW URL query param (set at registration time)
+const BUILD_ID = new URL(self.location).searchParams.get('v') || 'dev'
+const CACHE_NAME = `pack-${BUILD_ID}`
 
 // Cache the app shell on install
 self.addEventListener('install', (event) => {
