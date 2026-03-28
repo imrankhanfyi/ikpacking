@@ -1,8 +1,7 @@
 import { useStore } from '../../store'
 
 export function TrashView() {
-  const allItems = useStore(s => s.masterItems)
-  const trashedItems = allItems.filter(i => i.deletedAt)
+  const trashedItems = useStore(s => s.getTrashedItems())
   const restoreMasterItem = useStore(s => s.restoreMasterItem)
   const permanentlyDeleteMasterItem = useStore(s => s.permanentlyDeleteMasterItem)
   const emptyTrash = useStore(s => s.emptyTrash)

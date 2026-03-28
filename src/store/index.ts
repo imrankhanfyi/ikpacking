@@ -51,6 +51,12 @@ interface AppStore {
 
   // Seed integrity
   mergeMissingSeeds: () => void
+
+  // Computed getters
+  getActiveItems: () => MasterItem[]
+  getTrashedItems: () => MasterItem[]
+  getActiveTrips: () => Trip[]
+  getCompletedTrips: () => Trip[]
 }
 
 export const useStore = create<AppStore>()(
@@ -210,6 +216,11 @@ export const useStore = create<AppStore>()(
           settings: data.settings ?? { openRouterApiKey: '', hasCompletedOnboarding: false },
         })
       },
+
+      getActiveItems: () => get().masterItems.filter(i => !i.deletedAt),
+      getTrashedItems: () => get().masterItems.filter(i => !!i.deletedAt),
+      getActiveTrips: () => get().trips.filter(t => !t.completedAt).sort((a, b) => a.departureDate.localeCompare(b.departureDate)),
+      getCompletedTrips: () => get().trips.filter(t => !!t.completedAt).sort((a, b) => b.departureDate.localeCompare(a.departureDate)),
     }),
     {
       name: 'packing-app-store',

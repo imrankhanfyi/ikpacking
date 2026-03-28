@@ -6,8 +6,7 @@ import { ItemForm } from './ItemForm'
 import { toastUndo } from '../../store/toastStore'
 
 export function MasterListView() {
-  const allItems = useStore(s => s.masterItems)
-  const masterItems = allItems.filter(i => !i.deletedAt)
+  const masterItems = useStore(s => s.getActiveItems())
   const deleteMasterItem = useStore(s => s.deleteMasterItem)
   const restoreMasterItem = useStore(s => s.restoreMasterItem)
   const [editing, setEditing] = useState<MasterItem | null | 'new'>(null)
