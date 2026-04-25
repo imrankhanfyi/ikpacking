@@ -11,24 +11,36 @@ export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void
   const [nameError, setNameError] = useState(false)
   const [name, setName] = useState(kit?.name ?? '')
   const [items, setItems] = useState<KitItem[]>(kit?.items ?? [])
-  const [search, setSearch] = useState('')
 
-  const filteredMaster = masterItems.filter(i =>
-    i.name.toLowerCase().includes(search.toLowerCase()) &&
-    !items.some(ki => ki.masterItemId === i.id)
-  )
+  const grouped = masterItems
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .reduce<Record<string, typeof masterItems>>((acc, item) => {
+      const cat = item.category ?? 'Other'
+      if (!acc[cat]) acc[cat] = []
+      acc[cat].push(item)
+      return acc
+    }, {})
+  const categories = Object.keys(grouped).sort()
 
-  function addItem(masterItemId: string) {
-    setItems(prev => [...prev, { masterItemId, qty: 1 }])
-    setSearch('')
+  function isInKit(masterItemId: string) {
+    return items.some(ki => ki.masterItemId === masterItemId)
   }
 
-  function removeItem(index: number) {
-    setItems(prev => prev.filter((_, i) => i !== index))
+  function kitIndex(masterItemId: string) {
+    return items.findIndex(ki => ki.masterItemId === masterItemId)
   }
 
-  function updateItem(index: number, updates: Partial<KitItem>) {
-    setItems(prev => prev.map((ki, i) => i === index ? { ...ki, ...updates } : ki))
+  function toggleItem(masterItemId: string) {
+    const idx = kitIndex(masterItemId)
+    if (idx >= 0) {
+      setItems(prev => prev.filter((_, i) => i !== idx))
+    } else {
+      setItems(prev => [...prev, { masterItemId, qty: 1 }])
+    }
+  }
+
+  function updateQty(masterItemId: string, qty: number) {
+    setItems(prev => prev.map(ki => ki.masterItemId === masterItemId ? { ...ki, qty } : ki))
   }
 
   function handleSave() {
@@ -39,50 +51,51 @@ export function KitForm({ kit, onClose }: { kit: Kit | null; onClose: () => void
     onClose()
   }
 
-  function itemName(id: string) {
-    return masterItems.find(i => i.id === id)?.name ?? id
-  }
-
   return (
-    <Modal title={kit ? 'Edit kit' : 'New kit'} onClose={onClose}>
+    <Modal title={kit ? 'Edit kit' : 'New kit'} onClose={onClose} wide>
       <div className="space-y-4">
         <input value={name} onChange={e => { setName(e.target.value); setNameError(false) }} placeholder="Kit name (e.g. Hiking)" className={`w-full bg-white border-[1.5px] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d] ${nameError ? 'border-[#e05a33]' : 'border-[#ddd]'}`} />
         {nameError && <p className="text-xs text-[#e05a33]">Name is required</p>}
 
         <div>
-          <p className="text-xs text-[#999] mb-1">Items in this kit</p>
-          <div className="space-y-2 mb-2">
-            {items.map((ki, i) => (
-              <div key={i} className="flex items-center gap-2 bg-[#f5f3ef] rounded p-2">
-                <span className="flex-1 text-sm text-[#2d2d2d]">{itemName(ki.masterItemId)}</span>
-                <input type="number" min={1} value={ki.qty} onChange={e => updateItem(i, { qty: Number(e.target.value) })}
-                  className="w-14 bg-white border-[1.5px] border-[#ddd] rounded px-2 py-1 text-xs text-[#2d2d2d] text-center focus:outline-none focus:border-[#2d2d2d]" />
-                <select
-                  value={ki.swapsItemId ?? ''}
-                  onChange={e => updateItem(i, { swapsItemId: e.target.value || undefined })}
-                  className="flex-1 bg-white border-[1.5px] border-[#ddd] rounded px-2 py-1 text-xs text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]"
-                >
-                  <option value="">no swap</option>
-                  {masterItems.filter(m => m.id !== ki.masterItemId).map(m => (
-                    <option key={m.id} value={m.id}>replaces: {m.name}</option>
-                  ))}
-                </select>
-                <button onClick={() => removeItem(i)} className="text-[#ccc] hover:text-[#e05a33] text-xs">✕</button>
+          <p className="font-mono text-[10px] uppercase tracking-[2px] text-[#999] mb-2">
+            Items in this kit <span className="normal-case tracking-normal">{items.length > 0 && `· ${items.length} selected`}</span>
+          </p>
+          <div className="max-h-[60vh] overflow-y-auto border-[1.5px] border-[#ddd] rounded divide-y divide-[#eee]">
+            {categories.map(cat => (
+              <div key={cat}>
+                <div className="px-3 py-1.5 bg-[#f9f8f6] font-mono text-[10px] uppercase tracking-[2px] text-[#bbb] sticky top-0">
+                  {cat}
+                </div>
+                {grouped[cat].map(m => {
+                  const checked = isInKit(m.id)
+                  const ki = checked ? items[kitIndex(m.id)] : null
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => toggleItem(m.id)}
+                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer select-none ${checked ? 'bg-[#f5f3ef]' : 'hover:bg-[#fafafa]'}`}
+                    >
+                      <span className={`w-4 text-center text-xs font-bold ${checked ? 'text-[#2d2d2d]' : 'text-[#ddd]'}`}>
+                        {checked ? '✓' : '○'}
+                      </span>
+                      <span className="flex-1 text-sm text-[#2d2d2d]">{m.name}</span>
+                      {checked && ki && (
+                        <input
+                          type="number"
+                          min={1}
+                          value={ki.qty}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => updateQty(m.id, Number(e.target.value))}
+                          className="w-14 bg-white border-[1.5px] border-[#ddd] rounded px-2 py-1 text-xs text-[#2d2d2d] text-center focus:outline-none focus:border-[#2d2d2d]"
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             ))}
           </div>
-
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search master items to add..." className="w-full bg-white border-[1.5px] border-[#ddd] rounded px-3 py-1.5 text-sm text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
-          {search && (
-            <div className="mt-1 max-h-32 overflow-y-auto bg-white border-[1.5px] border-[#ddd] rounded divide-y divide-[#eee]">
-              {filteredMaster.slice(0, 8).map(m => (
-                <button key={m.id} onClick={() => addItem(m.id)} className="w-full text-left px-3 py-1.5 text-sm text-[#2d2d2d] hover:bg-[#f5f3ef]">
-                  {m.name} <span className="text-[#999] text-xs">· {m.category}</span>
-                </button>
-              ))}
-              {filteredMaster.length === 0 && <p className="px-3 py-2 text-xs text-[#999]">No matches</p>}
-            </div>
-          )}
         </div>
 
         <button onClick={handleSave} disabled={!name.trim()} className="w-full py-2 bg-[#2d2d2d] disabled:opacity-50 text-white rounded text-sm font-bold">Save kit</button>
