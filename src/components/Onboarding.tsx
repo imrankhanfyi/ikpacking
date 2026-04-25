@@ -1,13 +1,59 @@
 import { useState } from 'react'
 import { useStore } from '../store'
+import { loadFromServer } from '../store/sync'
 
 export function Onboarding() {
   const updateSettings = useStore(s => s.updateSettings)
   const [apiKey, setApiKey] = useState('')
-  const [step, setStep] = useState<'welcome' | 'api'>('welcome')
+  const [step, setStep] = useState<'welcome' | 'sync' | 'api'>('welcome')
+  const [syncUrl, setSyncUrl] = useState('')
+  const [syncToken, setSyncToken] = useState('')
+  const [connecting, setConnecting] = useState(false)
 
   function finish() {
     updateSettings({ openRouterApiKey: apiKey, hasCompletedOnboarding: true })
+  }
+
+  async function handleConnect() {
+    setConnecting(true)
+    updateSettings({ syncUrl, syncToken })
+    try {
+      await loadFromServer()
+      if (useStore.getState().settings.openRouterApiKey) {
+        updateSettings({ hasCompletedOnboarding: true })
+      } else {
+        setStep('api')
+      }
+    } catch {
+      setStep('api')
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  if (step === 'sync') {
+    return (
+      <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
+        <div className="max-w-md w-full space-y-6">
+          <h1 className="text-2xl font-bold text-[#2d2d2d]">Restore from sync</h1>
+          <p className="text-[#999]">Used this app before? Connect to your sync server to restore your data and settings.</p>
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Server URL</label>
+            <input value={syncUrl} onChange={e => setSyncUrl(e.target.value)} placeholder="https://pack.imrankhan.fyi" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d]" />
+          </div>
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Sync token</label>
+            <input type="password" value={syncToken} onChange={e => setSyncToken(e.target.value)} placeholder="your-sync-token" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm font-mono focus:outline-none focus:border-[#2d2d2d]" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setStep('api')} className="flex-1 py-2 bg-[#f5f3ef] text-[#999] rounded text-sm">Skip</button>
+            <button onClick={handleConnect} disabled={connecting || !syncUrl.trim() || !syncToken.trim()} className="flex-1 py-2 bg-[#2d2d2d] hover:bg-[#444] disabled:opacity-50 text-white rounded text-sm font-semibold">
+              {connecting ? 'Connecting…' : 'Connect & restore'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (step === 'api') {
@@ -37,7 +83,7 @@ export function Onboarding() {
           <p className="text-sm text-[#2d2d2d]">✓ AI generates your list from a trip description</p>
           <p className="text-sm text-[#2d2d2d]">✓ Gets smarter after every trip</p>
         </div>
-        <button onClick={() => setStep('api')} className="w-full py-3 bg-[#2d2d2d] hover:bg-[#444] text-white rounded font-semibold">Get started →</button>
+        <button onClick={() => setStep('sync')} className="w-full py-3 bg-[#2d2d2d] hover:bg-[#444] text-white rounded font-semibold">Get started →</button>
       </div>
     </div>
   )
