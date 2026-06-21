@@ -1,8 +1,7 @@
-// Server sync — loads data from server on init, saves back on changes (debounced)
-
 import { useStore } from './index'
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
+let loaded = false
 
 function getSyncConfig() {
   const { syncToken, syncUrl } = useStore.getState().settings
@@ -63,13 +62,26 @@ export function debouncedSave() {
   saveTimer = setTimeout(() => saveToServer(), 1500)
 }
 
-// Subscribe to store changes and auto-save
-export function startSync() {
-  // Load from server on init
-  loadFromServer()
+export async function startSync() {
+  await loadFromServer()
+  loaded = true
 
-  // Save on every state change (debounced)
   useStore.subscribe(() => {
     if (getSyncConfig()) debouncedSave()
   })
+
+  const handleVisibility = async () => {
+    if (document.visibilityState === 'visible' && loaded) {
+      // Flush any pending debounced save before reloading so we don't lose local edits
+      if (saveTimer) {
+        clearTimeout(saveTimer)
+        saveTimer = null
+        await saveToServer()
+      }
+      await loadFromServer()
+    }
+  }
+
+  document.addEventListener('visibilitychange', handleVisibility)
+  window.addEventListener('focus', handleVisibility)
 }
