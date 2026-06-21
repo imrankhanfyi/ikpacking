@@ -209,11 +209,17 @@ export const useStore = create<AppStore>()(
 
       importData: (json) => {
         const data = JSON.parse(json)
+        const current = get().settings
         set({
           masterItems: data.masterItems ?? [],
           kits: data.kits ?? [],
           trips: data.trips ?? [],
-          settings: data.settings ?? { openRouterApiKey: '', syncToken: '', syncUrl: '', hasCompletedOnboarding: false },
+          settings: {
+            ...(data.settings ?? {}),
+            syncUrl: current.syncUrl,
+            syncToken: current.syncToken,
+            hasCompletedOnboarding: current.hasCompletedOnboarding,
+          },
         })
       },
 
