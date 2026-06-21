@@ -7,8 +7,8 @@ How to set up, deploy, and maintain the Pack app. Reference this when changing d
 ```
 Your devices (phone, laptop)
     ↓ browser
-http://94.130.96.213
-    ↓ Caddy (port 80)
+https://pack.imrankhan.fyi
+    ↓ Caddy (port 443 / HTTPS)
     ├── /api/*  → pack-sync (Node.js, port 3001) → /opt/pack-sync/data.json
     └── /*      → /var/www/pack/ (static files)
 ```
@@ -28,11 +28,11 @@ http://94.130.96.213
 
 ## Setting Up a New Device
 
-1. Open `http://94.130.96.213` in the browser
+1. Open `https://pack.imrankhan.fyi` in the browser
 2. Complete onboarding (enter OpenRouter key or skip)
 3. Go to **Manage > API key**
 4. Enter:
-   - Server URL: `http://94.130.96.213`
+   - Server URL: `https://pack.imrankhan.fyi`
    - Sync token: `a5ed5bd9c101a3855e10934769c492a00e85cec4a70b8d06`
 5. Click **Save & connect**
 6. Your data (master list, kits, trips) loads from the server
@@ -229,32 +229,9 @@ ssh root@94.130.96.213 "sed -i 's/PACK_SYNC_TOKEN=.*/PACK_SYNC_TOKEN=$NEW_TOKEN/
 
 Then update the token on each device in Manage > API key.
 
-## Adding HTTPS (when you have a domain)
+## HTTPS Configuration
 
-Point your domain's DNS A record to `94.130.96.213`, then update the Caddyfile:
-
-```
-your-domain.com {
-    handle /api/* {
-        reverse_proxy localhost:3001
-    }
-    handle {
-        root * /var/www/pack
-        file_server
-        try_files {path} /index.html
-        encode gzip
-    }
-}
-```
-
-Caddy auto-provisions a Let's Encrypt certificate. Restart Caddy and open port 443:
-
-```bash
-ufw allow 443/tcp
-systemctl restart caddy
-```
-
-Update the Server URL on all devices to `https://your-domain.com`.
+HTTPS is already configured via Let's Encrypt (Caddy auto-provisions).
 
 ## Troubleshooting
 
@@ -264,14 +241,14 @@ Update the Server URL on all devices to `https://your-domain.com`.
 ssh root@94.130.96.213 "systemctl status pack-sync"
 
 # Test the API
-curl -H "Authorization: Bearer YOUR_TOKEN" http://94.130.96.213/api/data
+curl -H "Authorization: Bearer YOUR_TOKEN" https://pack.imrankhan.fyi/api/data
 
 # Check logs
 ssh root@94.130.96.213 "journalctl -u pack-sync -n 20"
 ```
 
 **White screen after deploy:**
-Hard refresh (Cmd+Shift+R) to clear the service worker cache.
+Hard refresh (Cmd+Shift+R) or open in a private tab to bypass the service worker cache. If opening fresh on a new device, clear site data in browser settings (Application → Storage → Clear site data).
 
 **Data lost:**
 The server file is the source of truth: `/opt/pack-sync/data.json`. Back it up periodically:
