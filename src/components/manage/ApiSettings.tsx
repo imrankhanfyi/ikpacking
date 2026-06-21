@@ -47,7 +47,7 @@ export function ApiSettings() {
         <p className="text-xs text-[#999]">Sync your data across devices via a server. Enter the server URL and token.</p>
         <div>
           <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Server URL</label>
-          <input value={syncUrl} onChange={e => setSyncUrl(e.target.value)} placeholder="http://94.130.96.213" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#2d2d2d]" />
+          <input value={syncUrl} onChange={e => setSyncUrl(e.target.value)} placeholder="https://pack.imrankhan.fyi" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#2d2d2d]" />
         </div>
         <div>
           <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Sync token</label>
