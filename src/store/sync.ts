@@ -1,7 +1,6 @@
 import { useStore } from './index'
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
-let loaded = false
 
 function getSyncConfig() {
   const { syncToken, syncUrl } = useStore.getState().settings
@@ -64,7 +63,6 @@ export function debouncedSave() {
 
 export async function startSync() {
   await loadFromServer()
-  loaded = true
 
   useStore.subscribe(() => {
     if (getSyncConfig()) debouncedSave()
