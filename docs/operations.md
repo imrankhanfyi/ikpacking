@@ -241,7 +241,7 @@ HTTPS is already configured via Let's Encrypt (Caddy auto-provisions).
 ssh root@94.130.96.213 "systemctl status pack-sync"
 
 # Test the API
-curl -H "Authorization: Bearer YOUR_TOKEN" http://94.130.96.213/api/data
+curl -H "Authorization: Bearer YOUR_TOKEN" https://pack.imrankhan.fyi/api/data
 
 # Check logs
 ssh root@94.130.96.213 "journalctl -u pack-sync -n 20"

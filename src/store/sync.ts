@@ -71,7 +71,7 @@ export async function startSync() {
   })
 
   const handleVisibility = async () => {
-    if (document.visibilityState === 'visible' && loaded) {
+    if (document.visibilityState === 'visible') {
       // Flush any pending debounced save before reloading so we don't lose local edits
       if (saveTimer) {
         clearTimeout(saveTimer)
@@ -83,5 +83,4 @@ export async function startSync() {
   }
 
   document.addEventListener('visibilitychange', handleVisibility)
-  window.addEventListener('focus', handleVisibility)
 }
