@@ -24,7 +24,13 @@ export async function loadFromServer(): Promise<boolean> {
         masterItems: data.masterItems,
         kits: data.kits ?? [],
         trips: data.trips ?? [],
-        settings: { ...useStore.getState().settings, ...data.settings },
+        settings: {
+          ...useStore.getState().settings,
+          ...data.settings,
+          // Never overwrite device-local auth — the server copy may be stale
+          syncUrl: useStore.getState().settings.syncUrl,
+          syncToken: useStore.getState().settings.syncToken,
+        },
       })
       return true
     }
