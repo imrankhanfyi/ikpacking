@@ -12,8 +12,8 @@ function getSyncConfig() {
 }
 
 // Union-merge two lists by id. Server wins on id collision; records that exist
-// only locally are always preserved — so a trip created on this device can
-// never be dropped by a load that happens before it has been saved up.
+// only locally are preserved. Only safe for records with stable, globally-unique
+// ids (trips) — NOT for seeded content, whose ids are regenerated per device.
 function mergeById<T extends { id: string }>(local: T[], server: T[]): T[] {
   const byId = new Map<string, T>()
   for (const item of local) byId.set(item.id, item)
@@ -33,9 +33,16 @@ export async function loadFromServer(): Promise<boolean> {
     const data = await res.json()
 
     const state = useStore.getState()
+    // The library (masterItems + kits) is SERVER-AUTHORITATIVE. Its ids are
+    // re-seeded per device, so unioning would multiply it ("Razor" ×2). When the
+    // server has a library we take it wholesale and discard the local seed; only
+    // when the server is empty do we keep local (so a fresh server gets seeded
+    // by the push below). Trips have stable ids and ARE unioned by id.
+    const serverHasLibrary = Array.isArray(data.masterItems) && data.masterItems.length > 0
+
     useStore.setState({
-      masterItems: mergeById<MasterItem>(state.masterItems, data.masterItems ?? []),
-      kits: mergeById<Kit>(state.kits, data.kits ?? []),
+      masterItems: serverHasLibrary ? (data.masterItems as MasterItem[]) : state.masterItems,
+      kits: serverHasLibrary ? ((data.kits as Kit[]) ?? []) : state.kits,
       trips: mergeById<Trip>(state.trips, data.trips ?? []),
       settings: {
         ...state.settings,
@@ -46,8 +53,9 @@ export async function loadFromServer(): Promise<boolean> {
       },
     })
 
-    // Push the merged result back so the server gains any local-only records.
-    // Safe: a union only ever adds records, it never drops them.
+    // Push the result back so the server gains any local-only trips (and gets
+    // seeded if it was empty). Safe: the library is the server's own copy and
+    // trips are a union — nothing is dropped.
     await saveToServer()
     return true
   } catch {

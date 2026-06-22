@@ -111,11 +111,13 @@ describe('startSync', () => {
   })
 })
 
-describe('loadFromServer (non-destructive merge)', () => {
-  it('preserves a local-only trip, and the server wins on a colliding id', async () => {
+describe('loadFromServer (server-authoritative library, trips unioned)', () => {
+  it('replaces the local library with the server library; unions trips by id', async () => {
+    // Server library has DIFFERENT ids for the same-named items (the reseed case
+    // that caused duplication). Taking server wholesale must NOT duplicate them.
     const serverData = {
-      masterItems: [{ id: 'm1', name: 'Toothbrush' }],
-      kits: [],
+      masterItems: [{ id: 's-razor', name: 'Razor' }, { id: 's-tooth', name: 'Toothbrush' }],
+      kits: [{ id: 's-kit', name: 'International', items: [] }],
       trips: [
         { id: 'shared', name: 'NewName' },   // collides with local — server wins
         { id: 'server-only', name: 'FromServer' },
@@ -130,6 +132,8 @@ describe('loadFromServer (non-destructive merge)', () => {
 
     useStore.setState({
       settings: { ...useStore.getState().settings, syncToken: 'token-abc' },
+      masterItems: [{ id: 'l-razor', name: 'Razor' }, { id: 'l-tooth', name: 'Toothbrush' }] as any,
+      kits: [{ id: 'l-kit', name: 'International', items: [] }] as any,
       trips: [
         { id: 'local-only', name: 'LocalTrip' },
         { id: 'shared', name: 'OldName' },
@@ -140,21 +144,51 @@ describe('loadFromServer (non-destructive merge)', () => {
     const ok = await loadFromServer()
     expect(ok).toBe(true)
 
-    const trips = useStore.getState().trips
-    const byId = Object.fromEntries(trips.map(t => [t.id, t.name]))
+    const state = useStore.getState()
+    // Library is exactly the server's — no duplication from differing ids
+    expect(state.masterItems.map(i => i.id).sort()).toEqual(['s-razor', 's-tooth'])
+    expect(state.kits.map(k => k.id)).toEqual(['s-kit'])
 
-    // local-only record survived the load
-    expect(byId['local-only']).toBe('LocalTrip')
-    // server record was added
-    expect(byId['server-only']).toBe('FromServer')
-    // server won the id collision
-    expect(byId['shared']).toBe('NewName')
+    // Trips: local-only preserved, server-only added, server wins the collision
+    const trips = Object.fromEntries(state.trips.map(t => [t.id, t.name]))
+    expect(trips['local-only']).toBe('LocalTrip')
+    expect(trips['server-only']).toBe('FromServer')
+    expect(trips['shared']).toBe('NewName')
 
-    // The merged union was pushed back up so the server gains the local-only trip
-    expect(puts.length).toBeGreaterThan(0)
+    // Pushed back up: server library + unioned trips
     const pushed = JSON.parse(puts[puts.length - 1].options.body as string)
+    expect(pushed.masterItems.map((i: { id: string }) => i.id).sort()).toEqual(['s-razor', 's-tooth'])
     expect(pushed.trips.map((t: { id: string }) => t.id).sort()).toEqual(
       ['local-only', 'server-only', 'shared']
     )
+  })
+
+  it('keeps the local library when the server library is empty (fresh server)', async () => {
+    const serverData = { masterItems: [], kits: [], trips: [], settings: {} }
+    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { useStore } = await import('../../src/store/index')
+    const { loadFromServer } = await import('../../src/store/sync')
+
+    useStore.setState({
+      settings: { ...useStore.getState().settings, syncToken: 'token-abc' },
+      masterItems: [{ id: 'l-razor', name: 'Razor' }] as any,
+      kits: [{ id: 'l-kit', name: 'International', items: [] }] as any,
+      trips: [{ id: 'local-trip', name: 'LocalTrip' }] as any,
+    })
+
+    resolveGet()
+    await loadFromServer()
+
+    const state = useStore.getState()
+    // Empty server must NOT wipe the local library
+    expect(state.masterItems.map(i => i.id)).toEqual(['l-razor'])
+    expect(state.kits.map(k => k.id)).toEqual(['l-kit'])
+    expect(state.trips.map(t => t.id)).toEqual(['local-trip'])
+
+    // Local state pushed up to seed the fresh server
+    const pushed = JSON.parse(puts[puts.length - 1].options.body as string)
+    expect(pushed.masterItems.map((i: { id: string }) => i.id)).toEqual(['l-razor'])
   })
 })
