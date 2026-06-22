@@ -28,3 +28,4 @@ dist-ssr
 
 # Superpowers brainstorm sessions
 .superpowers/
+packing-backup-*.json

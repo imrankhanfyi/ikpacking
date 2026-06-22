@@ -31,3 +31,7 @@ export const TYPE_TAGS: Record<string, string[]> = {
 }
 
 export const AI_MODEL = 'anthropic/claude-haiku-4-5'
+
+// Single, fixed sync server. Hardcoded so the URL can never drift out of sync
+// (an editable field repeatedly reverted to a stale IP and broke saves).
+export const SYNC_URL = 'https://pack.imrankhan.fyi'

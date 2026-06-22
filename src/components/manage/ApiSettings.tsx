@@ -1,29 +1,29 @@
 import { useState } from 'react'
 import { useStore } from '../../store'
 import { loadFromServer } from '../../store/sync'
+import { SYNC_URL } from '../../constants'
 import { toast, toastError } from '../../store/toastStore'
 
 export function ApiSettings() {
   const settings = useStore(s => s.settings)
   const updateSettings = useStore(s => s.updateSettings)
   const [draft, setDraft] = useState(settings.openRouterApiKey)
-  const [syncUrl, setSyncUrl] = useState(settings.syncUrl)
   const [syncToken, setSyncToken] = useState(settings.syncToken)
   const [syncing, setSyncing] = useState(false)
 
   async function handleSaveSync() {
-    updateSettings({ syncUrl, syncToken })
+    updateSettings({ syncToken })
     setSyncing(true)
     // Test the connection
     try {
-      const res = await fetch(`${syncUrl.replace(/\/$/, '')}/api/data`, {
+      const res = await fetch(`${SYNC_URL}/api/data`, {
         headers: { 'Authorization': `Bearer ${syncToken}` },
       })
       if (res.ok) {
         toast('Sync connected. Loading data from server...')
         await loadFromServer()
       } else {
-        toastError('Connection failed — check URL and token.')
+        toastError('Connection failed — check your token.')
       }
     } catch {
       toastError('Could not reach sync server.')
@@ -44,19 +44,15 @@ export function ApiSettings() {
 
       <section className="space-y-4">
         <h3 className="text-sm font-semibold text-[#2d2d2d]">Server sync</h3>
-        <p className="text-xs text-[#999]">Sync your data across devices via a server. Enter the server URL and token.</p>
-        <div>
-          <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Server URL</label>
-          <input value={syncUrl} onChange={e => setSyncUrl(e.target.value)} placeholder="https://pack.imrankhan.fyi" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#2d2d2d]" />
-        </div>
+        <p className="text-xs text-[#999]">Sync your data across devices. Enter your sync token to connect to {SYNC_URL.replace(/^https?:\/\//, '')}.</p>
         <div>
           <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Sync token</label>
           <input type="password" value={syncToken} onChange={e => setSyncToken(e.target.value)} placeholder="your-sync-token" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#2d2d2d]" />
         </div>
-        <button onClick={handleSaveSync} disabled={syncing || !syncUrl.trim() || !syncToken.trim()} className="px-4 py-2 bg-[#2d2d2d] text-white rounded text-sm disabled:opacity-50">
+        <button onClick={handleSaveSync} disabled={syncing || !syncToken.trim()} className="px-4 py-2 bg-[#2d2d2d] text-white rounded text-sm disabled:opacity-50">
           {syncing ? 'Connecting...' : 'Save & connect'}
         </button>
-        {settings.syncUrl && settings.syncToken && <p className="text-xs text-[#2a6e4e]">Sync active</p>}
+        {settings.syncToken && <p className="text-xs text-[#2a6e4e]">Sync active</p>}
       </section>
     </div>
   )

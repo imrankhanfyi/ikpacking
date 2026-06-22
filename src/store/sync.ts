@@ -1,11 +1,24 @@
 import { useStore } from './index'
+import { SYNC_URL } from '../constants'
+import type { MasterItem, Kit, Trip } from '../types'
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 function getSyncConfig() {
-  const { syncToken, syncUrl } = useStore.getState().settings
-  if (!syncToken || !syncUrl) return null
-  return { token: syncToken, url: syncUrl.replace(/\/$/, '') }
+  // URL is fixed (SYNC_URL); the token is the only thing that gates sync.
+  const { syncToken } = useStore.getState().settings
+  if (!syncToken) return null
+  return { token: syncToken, url: SYNC_URL }
+}
+
+// Union-merge two lists by id. Server wins on id collision; records that exist
+// only locally are always preserved — so a trip created on this device can
+// never be dropped by a load that happens before it has been saved up.
+function mergeById<T extends { id: string }>(local: T[], server: T[]): T[] {
+  const byId = new Map<string, T>()
+  for (const item of local) byId.set(item.id, item)
+  for (const item of server) byId.set(item.id, item) // server wins on collision
+  return [...byId.values()]
 }
 
 export async function loadFromServer(): Promise<boolean> {
@@ -18,23 +31,23 @@ export async function loadFromServer(): Promise<boolean> {
     })
     if (!res.ok) return false
     const data = await res.json()
-    // Only apply if server has actual data (not empty object)
-    if (data.masterItems && data.masterItems.length > 0) {
-      useStore.setState({
-        masterItems: data.masterItems,
-        kits: data.kits ?? [],
-        trips: data.trips ?? [],
-        settings: {
-          ...useStore.getState().settings,
-          ...data.settings,
-          // Never overwrite device-local auth — the server copy may be stale
-          syncUrl: useStore.getState().settings.syncUrl,
-          syncToken: useStore.getState().settings.syncToken,
-        },
-      })
-      return true
-    }
-    // Server is empty — push current local data up
+
+    const state = useStore.getState()
+    useStore.setState({
+      masterItems: mergeById<MasterItem>(state.masterItems, data.masterItems ?? []),
+      kits: mergeById<Kit>(state.kits, data.kits ?? []),
+      trips: mergeById<Trip>(state.trips, data.trips ?? []),
+      settings: {
+        ...state.settings,
+        ...(data.settings ?? {}),
+        // Auth + the (unused) URL are device-local; never let the server set them
+        syncToken: state.settings.syncToken,
+        syncUrl: state.settings.syncUrl,
+      },
+    })
+
+    // Push the merged result back so the server gains any local-only records.
+    // Safe: a union only ever adds records, it never drops them.
     await saveToServer()
     return true
   } catch {
@@ -68,23 +81,12 @@ export function debouncedSave() {
 }
 
 export async function startSync() {
+  // Pull once at boot (non-destructive merge), then auto-save on every change.
+  // No reload-on-focus: a load can only run at boot, when in-memory state
+  // matches what's persisted — so it cannot clobber an unsaved local edit.
   await loadFromServer()
 
   useStore.subscribe(() => {
     if (getSyncConfig()) debouncedSave()
   })
-
-  const handleVisibility = async () => {
-    if (document.visibilityState === 'visible') {
-      // Flush any pending debounced save before reloading so we don't lose local edits
-      if (saveTimer) {
-        clearTimeout(saveTimer)
-        saveTimer = null
-        await saveToServer()
-      }
-      await loadFromServer()
-    }
-  }
-
-  document.addEventListener('visibilitychange', handleVisibility)
 }

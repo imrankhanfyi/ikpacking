@@ -6,7 +6,6 @@ export function Onboarding() {
   const updateSettings = useStore(s => s.updateSettings)
   const [apiKey, setApiKey] = useState('')
   const [step, setStep] = useState<'welcome' | 'sync' | 'api'>('welcome')
-  const [syncUrl, setSyncUrl] = useState('')
   const [syncToken, setSyncToken] = useState('')
   const [connecting, setConnecting] = useState(false)
 
@@ -16,7 +15,7 @@ export function Onboarding() {
 
   async function handleConnect() {
     setConnecting(true)
-    updateSettings({ syncUrl, syncToken })
+    updateSettings({ syncToken })
     try {
       await loadFromServer()
       if (useStore.getState().settings.openRouterApiKey) {
@@ -36,18 +35,14 @@ export function Onboarding() {
       <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
         <div className="max-w-md w-full space-y-6">
           <h1 className="text-2xl font-bold text-[#2d2d2d]">Restore from sync</h1>
-          <p className="text-[#999]">Used this app before? Connect to your sync server to restore your data and settings.</p>
-          <div>
-            <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Server URL</label>
-            <input value={syncUrl} onChange={e => setSyncUrl(e.target.value)} placeholder="https://pack.imrankhan.fyi" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm focus:outline-none focus:border-[#2d2d2d]" />
-          </div>
+          <p className="text-[#999]">Used this app before? Enter your sync token to restore your data and settings.</p>
           <div>
             <label className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Sync token</label>
             <input type="password" value={syncToken} onChange={e => setSyncToken(e.target.value)} placeholder="your-sync-token" className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] text-sm font-mono focus:outline-none focus:border-[#2d2d2d]" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => setStep('api')} className="flex-1 py-2 bg-[#f5f3ef] text-[#999] rounded text-sm">Skip</button>
-            <button onClick={handleConnect} disabled={connecting || !syncUrl.trim() || !syncToken.trim()} className="flex-1 py-2 bg-[#2d2d2d] hover:bg-[#444] disabled:opacity-50 text-white rounded text-sm font-semibold">
+            <button onClick={handleConnect} disabled={connecting || !syncToken.trim()} className="flex-1 py-2 bg-[#2d2d2d] hover:bg-[#444] disabled:opacity-50 text-white rounded text-sm font-semibold">
               {connecting ? 'Connecting…' : 'Connect & restore'}
             </button>
           </div>

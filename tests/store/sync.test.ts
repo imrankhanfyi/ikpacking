@@ -110,3 +110,51 @@ describe('startSync', () => {
     expect(puts.length).toBeGreaterThan(0)
   })
 })
+
+describe('loadFromServer (non-destructive merge)', () => {
+  it('preserves a local-only trip, and the server wins on a colliding id', async () => {
+    const serverData = {
+      masterItems: [{ id: 'm1', name: 'Toothbrush' }],
+      kits: [],
+      trips: [
+        { id: 'shared', name: 'NewName' },   // collides with local — server wins
+        { id: 'server-only', name: 'FromServer' },
+      ],
+      settings: {},
+    }
+    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { useStore } = await import('../../src/store/index')
+    const { loadFromServer } = await import('../../src/store/sync')
+
+    useStore.setState({
+      settings: { ...useStore.getState().settings, syncToken: 'token-abc' },
+      trips: [
+        { id: 'local-only', name: 'LocalTrip' },
+        { id: 'shared', name: 'OldName' },
+      ] as any,
+    })
+
+    resolveGet()
+    const ok = await loadFromServer()
+    expect(ok).toBe(true)
+
+    const trips = useStore.getState().trips
+    const byId = Object.fromEntries(trips.map(t => [t.id, t.name]))
+
+    // local-only record survived the load
+    expect(byId['local-only']).toBe('LocalTrip')
+    // server record was added
+    expect(byId['server-only']).toBe('FromServer')
+    // server won the id collision
+    expect(byId['shared']).toBe('NewName')
+
+    // The merged union was pushed back up so the server gains the local-only trip
+    expect(puts.length).toBeGreaterThan(0)
+    const pushed = JSON.parse(puts[puts.length - 1].options.body as string)
+    expect(pushed.trips.map((t: { id: string }) => t.id).sort()).toEqual(
+      ['local-only', 'server-only', 'shared']
+    )
+  })
+})
