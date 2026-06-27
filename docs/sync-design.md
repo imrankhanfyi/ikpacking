@@ -151,16 +151,32 @@ tombstones), `tests/store/sync.test.ts` (LWW load, ping-pong guard, secret-strip
 
 ---
 
-## 7. Rollout order (do NOT reorder)
+## 7. Rollout order (as executed 2026-06-27 — do NOT reorder)
 
 1. `npm test` + `npm run build` green locally.
-2. **Back up `data.json`** on the server (`cp`), then deploy `server/server.mjs` +
-   `shared/syncMerge.mjs`; rotate the token → passphrase; restart `pack-sync`.
-   The 426 gate is now live → old tabs can't write.
-3. Run `scripts/normalize-server-data.mjs` once → canonical server (deterministic
-   seed ids, FKs remapped, secrets stripped). Idempotent.
-4. Deploy the new client build to `/var/www/pack/`.
-5. Each device's next load: persist migration → LWW merge → converges, no dups.
+2. **Back up `data.json`** on the server (`cp` to `data.json.pre-phase1-bak`, plus a
+   local pull). Deploy `server/server.mjs` + `shared/syncMerge.mjs` to
+   `/opt/pack-sync/{server,shared}/`; update the systemd unit (`ExecStart` →
+   `server/server.mjs`, add `PACK_DATA_FILE`); restart `pack-sync`. The 426 gate is
+   now live → old tabs can't write.
+3. **Normalize the server data by REPLACING `data.json` directly — NOT via the
+   script's PUT.** ⚠️ The new server *merges* every PUT (`mergeData(current,
+   incoming)`, union by id). PUTting normalized (new deterministic-id) seeds while
+   the file still holds old random-id seeds would UNION them → 96 duplicated items.
+   So: GET current data → run it through `normalize()` (from
+   `scripts/normalize-server-data.mjs`, which exports the pure function) → write the
+   result straight to `/opt/pack-sync/data.json` (stop service → atomic `mv` →
+   start). The script's PUT path is only safe to re-run once the server is *already*
+   normalized (then it's an idempotent no-op, ids match). A future fix would add a
+   `--write-file`/direct-replace mode to the script; until then, normalization of
+   un-normalized data is a direct file write.
+4. Deploy the new client build to `/var/www/pack/` (`scp -r dist/*`).
+5. Each device's next load: persist migration v1→v2 → LWW merge → converges, no dups.
+6. **Rotate the token → passphrase last** (after live verification, so the
+   verification could use the existing token). Old token now returns 401; each
+   device re-enters the passphrase once (or scans the connect-link QR). Done
+   2026-06-27 — passphrase set in `PACK_SYNC_TOKEN`; the old token (exposed in git
+   history) is dead.
 
 ---
 

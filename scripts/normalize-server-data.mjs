@@ -4,6 +4,15 @@
 // canonicalizes it to the deterministic-id + LWW/tombstone shape (schemaVersion 2),
 // and PUTs it back.
 //
+// ⚠️ CAUTION — the PUT path is only safe against an ALREADY-normalized server.
+// The server MERGES every PUT (union by id). PUTting new deterministic-id seeds
+// while the file still holds OLD random-id seeds would UNION them → duplicates.
+// For the FIRST normalization of un-normalized data, do a DIRECT FILE REPLACE
+// instead: GET → `normalize()` (exported below) → write the result straight to
+// /opt/pack-sync/data.json (stop service → atomic mv → start). See
+// docs/sync-design.md §7 step 3. Once normalized, re-running the PUT is an
+// idempotent no-op (ids already match).
+//
 // IDEMPOTENCY: Running this script twice is safe and produces the same result:
 //   - Seed ids are deterministic (seedItemId/seedKitId derive from the item name),
 //     so re-running re-computes the same ids.
