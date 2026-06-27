@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mergeData } from '../../shared/syncMerge.mjs'
 
-// Isolated per test: module-level `loaded` and subscriptions persist across tests
-// unless we reset the module graph each time.
+// Isolated per test: module-level `loaded`/`stopped` and subscriptions persist
+// across tests unless we reset the module graph each time.
 beforeEach(() => {
-  // Provide a working localStorage before the store module is imported
   const store: Record<string, string> = {}
   vi.stubGlobal('localStorage', {
     getItem: (k: string) => store[k] ?? null,
@@ -20,175 +20,205 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// Build a mock fetch: GET blocks until resolveGet() is called; PUT is recorded.
-function makeFetch(serverData: Record<string, unknown>) {
-  const puts: Array<{ url: string; options: RequestInit }> = []
-  const { promise: getPromise, resolve: resolveGet } = Promise.withResolvers<void>()
+// --- record builders ---------------------------------------------------------
+const titem = (id: string, updatedAt: string, isPacked = false, extra: Record<string, unknown> = {}) =>
+  ({ id, masterItemId: null, name: id, qty: 1, isIncluded: true, isPacked, isLastMinute: false, isEssential: false, category: 'Misc', updatedAt, deletedAt: null, ...extra }) as any
 
-  const mockFetch = vi.fn(async (url: string, options?: RequestInit) => {
-    if (!options?.method || options.method === 'GET') {
-      await getPromise
-      return { ok: true, json: async () => serverData } as Response
+const ttrip = (id: string, updatedAt: string, items: unknown[] = [], extra: Record<string, unknown> = {}) =>
+  ({ id, name: id, createdAt: updatedAt, departureDate: '2026-01-01', completedAt: null, profile: {}, activeKitIds: [], items, updatedAt, deletedAt: null, ...extra }) as any
+
+const mitem = (id: string, updatedAt: string, extra: Record<string, unknown> = {}) =>
+  ({ id, name: id, category: 'Misc', tags: [], defaultQty: 1, qtyBasis: 'fixed', isLastMinute: false, isEssential: false, updatedAt, deletedAt: null, ...extra }) as any
+
+// Faithful mini-server: PUT merges via the REAL mergeData and returns the merged
+// doc, exactly like server/server.mjs. GET returns current state (optionally
+// blocked on a promise to test ordering).
+function makeServer(initial: Record<string, unknown> = {}, opts: { blockGet?: Promise<void> } = {}) {
+  let state: any = mergeData(initial, {})
+  const puts: Array<{ url: string; options: RequestInit }> = []
+
+  const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+    const method = options?.method ?? 'GET'
+    if (method === 'GET') {
+      if (opts.blockGet) await opts.blockGet
+      return { ok: true, status: 200, json: async () => state } as Response
     }
     puts.push({ url, options: options! })
-    return { ok: true } as Response
+    const body = JSON.parse(options!.body as string)
+    if ((body.schemaVersion ?? 0) < 2) {
+      return { ok: false, status: 426, json: async () => ({}) } as Response
+    }
+    state = mergeData(state, body)
+    return { ok: true, status: 200, json: async () => state } as Response
   })
 
-  return { mockFetch, resolveGet, puts }
+  return { fetchMock, puts, getState: () => state }
 }
 
-describe('startSync', () => {
-  it('(a) auto-save does NOT fire before loadFromServer resolves', async () => {
-    const serverData = {
-      masterItems: [{ id: '1', name: 'Toothbrush' }],
-      kits: [],
-      trips: [],
-      settings: {},
-    }
-    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
-    vi.stubGlobal('fetch', mockFetch)
+function setToken(useStore: any, masterItems: unknown[] = [], kits: unknown[] = [], trips: unknown[] = []) {
+  useStore.setState({
+    settings: { ...useStore.getState().settings, syncToken: 'token-abc', syncUrl: 'https://x' },
+    masterItems, kits, trips,
+  })
+}
 
-    // Fresh module graph so `loaded = false` and no leftover subscribers
+// --- ordering invariants (still valid under the new model) -------------------
+describe('startSync ordering', () => {
+  it('(a) auto-save does NOT fire before loadFromServer resolves', async () => {
+    const { resolve: resolveGet, promise: blockGet } = Promise.withResolvers<void>()
+    const { fetchMock, puts } = makeServer({}, { blockGet })
+    vi.stubGlobal('fetch', fetchMock)
+
     const { useStore } = await import('../../src/store/index')
     const { startSync } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [])
 
-    useStore.setState({
-      settings: {
-        ...useStore.getState().settings,
-        syncToken: 'token-abc',
-        syncUrl: 'https://sync.example.com',
-      },
-    })
-
-    // Start sync but do NOT await — GET is blocked on getPromise
-    startSync()
-
-    // Mutate the store while the initial GET is still in-flight
-    useStore.setState({ trips: [] })
-
-    // Advance past the 1500ms debounce window
+    startSync() // not awaited — GET is blocked
+    useStore.setState({ trips: [ttrip('t1', '2026-01-01T00:00:00.000Z')] })
     await vi.advanceTimersByTimeAsync(2000)
 
-    // No PUT should have fired because the subscriber hasn't been attached yet
-    expect(puts).toHaveLength(0)
-
-    // Let the load complete so the module can settle
+    expect(puts).toHaveLength(0) // subscriber not attached until load resolves
     resolveGet()
   })
 
-  it('(b) auto-save DOES fire after loadFromServer resolves and a store change occurs', async () => {
-    const serverData = {
-      masterItems: [{ id: '1', name: 'Toothbrush' }],
-      kits: [],
-      trips: [],
-      settings: {},
-    }
-    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
-    vi.stubGlobal('fetch', mockFetch)
+  it('(b) auto-save DOES fire after load resolves and a change occurs', async () => {
+    const { fetchMock, puts } = makeServer({})
+    vi.stubGlobal('fetch', fetchMock)
 
     const { useStore } = await import('../../src/store/index')
     const { startSync } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [])
 
-    useStore.setState({
-      settings: {
-        ...useStore.getState().settings,
-        syncToken: 'token-abc',
-        syncUrl: 'https://sync.example.com',
-      },
-    })
-
-    // Resolve the GET immediately so startSync can fully initialise
-    resolveGet()
     await startSync()
-
-    // Mutate the store — subscriber is now attached
-    useStore.setState({ trips: [] })
-
-    // Fire the debounce
+    const before = puts.length
+    useStore.setState({ trips: [ttrip('t1', '2026-06-01T00:00:00.000Z')] })
     await vi.advanceTimersByTimeAsync(2000)
 
-    expect(puts.length).toBeGreaterThan(0)
+    expect(puts.length).toBeGreaterThan(before)
   })
 })
 
-describe('loadFromServer (server-authoritative library, trips unioned)', () => {
-  it('replaces the local library with the server library; unions trips by id', async () => {
-    // Server library has DIFFERENT ids for the same-named items (the reseed case
-    // that caused duplication). Taking server wholesale must NOT duplicate them.
-    const serverData = {
-      masterItems: [{ id: 's-razor', name: 'Razor' }, { id: 's-tooth', name: 'Toothbrush' }],
-      kits: [{ id: 's-kit', name: 'International', items: [] }],
+// --- LWW load behavior -------------------------------------------------------
+describe('loadFromServer (LWW, non-destructive)', () => {
+  it('preserves local-only trips, adds server-only, merges collisions by updatedAt', async () => {
+    const server = {
+      masterItems: [mitem('m1', '2026-01-01T00:00:00.000Z')],
       trips: [
-        { id: 'shared', name: 'NewName' },   // collides with local — server wins
-        { id: 'server-only', name: 'FromServer' },
+        ttrip('shared', '2026-02-01T00:00:00.000Z', [], { name: 'ServerNewer' }),
+        ttrip('server-only', '2026-01-01T00:00:00.000Z'),
       ],
-      settings: {},
     }
-    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
-    vi.stubGlobal('fetch', mockFetch)
+    const { fetchMock } = makeServer(server)
+    vi.stubGlobal('fetch', fetchMock)
 
     const { useStore } = await import('../../src/store/index')
     const { loadFromServer } = await import('../../src/store/sync')
-
-    useStore.setState({
-      settings: { ...useStore.getState().settings, syncToken: 'token-abc' },
-      masterItems: [{ id: 'l-razor', name: 'Razor' }, { id: 'l-tooth', name: 'Toothbrush' }] as any,
-      kits: [{ id: 'l-kit', name: 'International', items: [] }] as any,
-      trips: [
-        { id: 'local-only', name: 'LocalTrip' },
-        { id: 'shared', name: 'OldName' },
-      ] as any,
-    })
-
-    resolveGet()
-    const ok = await loadFromServer()
-    expect(ok).toBe(true)
-
-    const state = useStore.getState()
-    // Library is exactly the server's — no duplication from differing ids
-    expect(state.masterItems.map(i => i.id).sort()).toEqual(['s-razor', 's-tooth'])
-    expect(state.kits.map(k => k.id)).toEqual(['s-kit'])
-
-    // Trips: local-only preserved, server-only added, server wins the collision
-    const trips = Object.fromEntries(state.trips.map(t => [t.id, t.name]))
-    expect(trips['local-only']).toBe('LocalTrip')
-    expect(trips['server-only']).toBe('FromServer')
-    expect(trips['shared']).toBe('NewName')
-
-    // Pushed back up: server library + unioned trips
-    const pushed = JSON.parse(puts[puts.length - 1].options.body as string)
-    expect(pushed.masterItems.map((i: { id: string }) => i.id).sort()).toEqual(['s-razor', 's-tooth'])
-    expect(pushed.trips.map((t: { id: string }) => t.id).sort()).toEqual(
-      ['local-only', 'server-only', 'shared']
+    setToken(useStore,
+      [mitem('m2', '2026-01-01T00:00:00.000Z')],
+      [],
+      [ttrip('local-only', '2026-01-01T00:00:00.000Z'), ttrip('shared', '2026-01-01T00:00:00.000Z', [], { name: 'LocalOlder' })],
     )
+
+    expect(await loadFromServer()).toBe(true)
+    const s = useStore.getState()
+    const trips = Object.fromEntries(s.trips.map((t: any) => [t.id, t.name]))
+    expect(trips['local-only']).toBeDefined()       // local-only preserved (NOT wiped)
+    expect(trips['server-only']).toBeDefined()       // server-only added
+    expect(trips['shared']).toBe('ServerNewer')      // newer updatedAt wins
+    // Library is unioned, not wholesale-replaced.
+    expect(s.masterItems.map((i: any) => i.id).sort()).toEqual(['m1', 'm2'])
   })
 
-  it('keeps the local library when the server library is empty (fresh server)', async () => {
-    const serverData = { masterItems: [], kits: [], trips: [], settings: {} }
-    const { mockFetch, resolveGet, puts } = makeFetch(serverData)
-    vi.stubGlobal('fetch', mockFetch)
+  it('the reported bug: a locally-newer packed item is NOT reverted by older server state', async () => {
+    const server = { trips: [ttrip('montana', '2026-06-01T00:00:00.000Z', [titem('i1', '2026-06-01T00:00:00.000Z', false)])] }
+    const { fetchMock } = makeServer(server)
+    vi.stubGlobal('fetch', fetchMock)
 
     const { useStore } = await import('../../src/store/index')
     const { loadFromServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [
+      ttrip('montana', '2026-06-10T00:00:00.000Z', [titem('i1', '2026-06-10T12:00:00.000Z', true)]),
+    ])
 
+    await loadFromServer()
+    const item = useStore.getState().trips.find((t: any) => t.id === 'montana').items[0]
+    expect(item.isPacked).toBe(true)
+  })
+})
+
+// --- the ping-pong / fixpoint guard (the critical concurrency invariant) ------
+describe('remote-apply guard', () => {
+  it('loading an already-converged server produces ZERO puts and no churn', async () => {
+    const records = { masterItems: [mitem('m1', '2026-01-01T00:00:00.000Z')], trips: [ttrip('t1', '2026-01-01T00:00:00.000Z')] }
+    const { fetchMock, puts } = makeServer(records)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { loadFromServer } = await import('../../src/store/sync')
+    // Local is canonically identical to the server.
+    setToken(useStore, records.masterItems, [], records.trips)
+
+    await loadFromServer()
+    expect(puts).toHaveLength(0) // nothing new either way -> no save
+  })
+
+  it('applying a server response twice is a fixpoint (second load adds no puts)', async () => {
+    const { fetchMock, puts } = makeServer({ trips: [ttrip('t1', '2026-02-01T00:00:00.000Z')] })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { startSync, loadFromServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [ttrip('t1', '2026-01-01T00:00:00.000Z')]) // local older -> first load adopts server
+
+    await startSync()
+    await vi.advanceTimersByTimeAsync(2000)
+    const afterFirst = puts.length
+    await loadFromServer() // converged now
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(puts.length).toBe(afterFirst) // no further traffic
+  })
+})
+
+// --- secrets + version gate --------------------------------------------------
+describe('saveToServer', () => {
+  it('never sends secrets and always tags the schema version', async () => {
+    const { fetchMock, puts } = makeServer({})
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { saveToServer } = await import('../../src/store/sync')
     useStore.setState({
-      settings: { ...useStore.getState().settings, syncToken: 'token-abc' },
-      masterItems: [{ id: 'l-razor', name: 'Razor' }] as any,
-      kits: [{ id: 'l-kit', name: 'International', items: [] }] as any,
-      trips: [{ id: 'local-trip', name: 'LocalTrip' }] as any,
+      settings: { ...useStore.getState().settings, syncToken: 'token-abc', openRouterApiKey: 'sk-or-SECRET' },
+      masterItems: [], kits: [], trips: [ttrip('t1', '2026-01-01T00:00:00.000Z')],
     })
 
-    resolveGet()
-    await loadFromServer()
+    await saveToServer()
+    const body = JSON.parse(puts[0].options.body as string)
+    expect(body.schemaVersion).toBe(2)
+    expect(body.openRouterApiKey).toBeUndefined()
+    expect(body.syncToken).toBeUndefined()
+    expect(body.settings).toBeUndefined()
+  })
+})
 
-    const state = useStore.getState()
-    // Empty server must NOT wipe the local library
-    expect(state.masterItems.map(i => i.id)).toEqual(['l-razor'])
-    expect(state.kits.map(k => k.id)).toEqual(['l-kit'])
-    expect(state.trips.map(t => t.id)).toEqual(['local-trip'])
+describe('schema-version gate (426)', () => {
+  it('a 426 from the server stops syncing for the session', async () => {
+    // Server that returns 426 on GET.
+    const fetchMock = vi.fn(async (_url: string, options?: RequestInit) => {
+      if ((options?.method ?? 'GET') === 'GET') return { ok: false, status: 426, json: async () => ({}) } as Response
+      return { ok: true, status: 200, json: async () => ({}) } as Response
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
-    // Local state pushed up to seed the fresh server
-    const pushed = JSON.parse(puts[puts.length - 1].options.body as string)
-    expect(pushed.masterItems.map((i: { id: string }) => i.id)).toEqual(['l-razor'])
+    const { useStore } = await import('../../src/store/index')
+    const { startSync } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [])
+
+    await startSync()
+    const callsAfterBoot = fetchMock.mock.calls.length
+    useStore.setState({ trips: [ttrip('t1', '2026-06-01T00:00:00.000Z')] })
+    await vi.advanceTimersByTimeAsync(2000)
+    // Syncing halted: the post-boot change does not produce another request.
+    expect(fetchMock.mock.calls.length).toBe(callsAfterBoot)
   })
 })

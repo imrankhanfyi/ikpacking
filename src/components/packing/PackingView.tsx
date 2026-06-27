@@ -21,9 +21,10 @@ export function PackingView() {
 
   if (!trip) return <div className="p-6 text-[#999]">Trip not found</div>
 
-  const included = trip.items.filter(i => i.isIncluded)
+  const liveItems = trip.items.filter(i => i.deletedAt == null)
+  const included = liveItems.filter(i => i.isIncluded)
   const packed = included.filter(i => i.isPacked)
-  const lastMinuteItems = computeLastMinuteItems(trip.items, trip.departureDate)
+  const lastMinuteItems = computeLastMinuteItems(liveItems, trip.departureDate)
 
   function handleToggle(itemId: string) {
     const item = trip!.items.find(i => i.id === itemId)
@@ -87,8 +88,8 @@ export function PackingView() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <PackingColumn categories={CATEGORY_LAYOUT.LEFT} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
-        <PackingColumn categories={CATEGORY_LAYOUT.RIGHT} items={trip.items} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
+        <PackingColumn categories={CATEGORY_LAYOUT.LEFT} items={liveItems} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
+        <PackingColumn categories={CATEGORY_LAYOUT.RIGHT} items={liveItems} onToggle={handleToggle} onQtyChange={handleQtyChange} onRemove={handleRemove} onRestore={handleRestore} />
       </div>
 
       {included.length === 0 && (
@@ -114,7 +115,7 @@ export function PackingView() {
 
       {showGate && (
         <EssentialsGate
-          items={trip.items.filter(i => i.isEssential && i.isIncluded)}
+          items={liveItems.filter(i => i.isEssential && i.isIncluded)}
           onConfirm={handleComplete}
           onClose={() => setShowGate(false)}
         />

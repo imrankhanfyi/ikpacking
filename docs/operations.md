@@ -23,7 +23,7 @@ https://pack.imrankhan.fyi
 | What | Value | Where it's stored |
 |------|-------|-------------------|
 | Server SSH | `root@94.130.96.213` | Your Mac's SSH key |
-| Sync token | `a5ed5bd9c101a3855e10934769c492a00e85cec4a70b8d06` | Server: `/etc/systemd/system/pack-sync.service` (env var). App: Manage > API key > Sync token |
+| Sync token | `YOUR_TOKEN_HERE` | Server: `/etc/systemd/system/pack-sync.service` (env var). App: Manage > API key > Sync token |
 | OpenRouter API key | (your key) | App: Manage > API key. Also stored in sync data. |
 
 ## Setting Up a New Device
@@ -33,7 +33,7 @@ https://pack.imrankhan.fyi
 3. Go to **Manage > API key**
 4. Enter:
    - Server URL: `https://pack.imrankhan.fyi`
-   - Sync token: `a5ed5bd9c101a3855e10934769c492a00e85cec4a70b8d06`
+   - Sync token: `YOUR_TOKEN_HERE`
 5. Click **Save & connect**
 6. Your data (master list, kits, trips) loads from the server
 
@@ -88,22 +88,39 @@ ufw allow 22/tcp
 Create the sync server:
 
 ```bash
-mkdir -p /opt/pack-sync
-# Copy server.js from old server or from the commands below
+mkdir -p /opt/pack-sync/server /opt/pack-sync/shared
 ```
 
-The sync server script (`/opt/pack-sync/server.js`):
+Deploy **both** files from the repo (relative paths must be preserved so the ESM import resolves):
+
+```bash
+# From your dev machine's project root:
+scp server/server.mjs  root@SERVER_IP:/opt/pack-sync/server/server.mjs
+scp shared/syncMerge.mjs root@SERVER_IP:/opt/pack-sync/shared/syncMerge.mjs
+```
+
+The sync server script (`/opt/pack-sync/server/server.mjs`) — ESM, merge-on-write:
 
 ```javascript
-const http = require('http')
-const fs = require('fs')
-const path = require('path')
+// Pack sync server — ESM, merge-on-write.
+// NOTE: This file never persists settings, openRouterApiKey, or syncToken —
+// mergeData only returns {masterItems, kits, trips}.
 
-const DATA_FILE = path.join(__dirname, 'data.json')
+import http from 'node:http'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { mergeData } from '../shared/syncMerge.mjs'
+
+const DATA_FILE = process.env.PACK_DATA_FILE ||
+  path.join(path.dirname(fileURLToPath(import.meta.url)), 'data.json')
 const TOKEN = process.env.PACK_SYNC_TOKEN || ''
 const PORT = 3001
 
 if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '{}')
+
+// ... (see server/server.mjs in the repo for the full source)
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -111,7 +128,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
 
-  const auth = req.headers.authorization
+  const auth = req.headers['authorization']
   if (!TOKEN || auth !== 'Bearer ' + TOKEN) {
     res.writeHead(401, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'unauthorized' }))
@@ -123,19 +140,9 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(data)
   } else if (req.url === '/api/data' && req.method === 'PUT') {
-    let body = ''
-    req.on('data', chunk => { body += chunk })
-    req.on('end', () => {
-      try {
-        JSON.parse(body)
-        fs.writeFileSync(DATA_FILE, body)
-        res.writeHead(200, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ ok: true }))
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ error: 'invalid json' }))
-      }
-    })
+    // PUT: validate → merge-on-write → respond with merged doc
+    // See server/server.mjs for full validation (schemaVersion gate, shape, far-future)
+    // ...
   } else {
     res.writeHead(404); res.end('not found')
   }
@@ -154,8 +161,9 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/pack-sync
-ExecStart=/usr/bin/node /opt/pack-sync/server.js
+ExecStart=/usr/bin/node /opt/pack-sync/server/server.mjs
 Environment=PACK_SYNC_TOKEN=YOUR_TOKEN_HERE
+Environment=PACK_DATA_FILE=/opt/pack-sync/data.json
 Restart=on-failure
 RestartSec=5
 

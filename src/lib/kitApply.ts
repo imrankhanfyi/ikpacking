@@ -38,6 +38,8 @@ export function applyKits(baseItems: TripItem[], allKits: Kit[], activeKitIds: s
         isLastMinute: master?.isLastMinute ?? false,
         isEssential: master?.isEssential ?? false,
         category: master?.category ?? 'Misc',
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
       })
       existingIds.add(kitItem.masterItemId)
     }
