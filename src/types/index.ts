@@ -5,6 +5,10 @@ export type Weather = 'cold' | 'warm' | 'mixed'
 export type TripType = 'business' | 'leisure' | 'mixed'
 export type TripMode = 'road-trip' | 'carry-on' | 'checked'
 
+// Every synced record carries an `updatedAt` (ISO string, drives last-write-wins
+// on merge) and a `deletedAt` tombstone (ISO string when soft-deleted, else null).
+// Both are required so `tsc -b` flags every construction site that forgets them.
+
 export interface MasterItem {
   id: string
   name: string
@@ -14,7 +18,8 @@ export interface MasterItem {
   qtyBasis: QtyBasis
   isLastMinute: boolean
   isEssential: boolean
-  deletedAt?: string | null  // ISO date string — soft delete
+  updatedAt: string
+  deletedAt: string | null  // ISO date string — soft delete tombstone
 }
 
 export interface KitItem {
@@ -23,10 +28,13 @@ export interface KitItem {
   swapsItemId?: string  // this kit item replaces another master item
 }
 
+// Kits merge whole-record by Kit.updatedAt, so KitItem needs no timestamps.
 export interface Kit {
   id: string
   name: string
   items: KitItem[]
+  updatedAt: string
+  deletedAt: string | null
 }
 
 export interface TripProfile {
@@ -47,6 +55,8 @@ export interface TripItem {
   isLastMinute: boolean
   isEssential: boolean
   category: string
+  updatedAt: string         // per-item LWW: check-offs merge by this
+  deletedAt: string | null  // tombstone
 }
 
 export interface Trip {
@@ -58,6 +68,8 @@ export interface Trip {
   profile: TripProfile
   activeKitIds: string[]
   items: TripItem[]
+  updatedAt: string         // LWW for trip scalars (name/departureDate/profile/activeKitIds)
+  deletedAt: string | null  // tombstone
 }
 
 export interface AppSettings {

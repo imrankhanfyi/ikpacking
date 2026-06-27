@@ -15,7 +15,7 @@ export function NewTripForm() {
   const [departureDate, setDepartureDate] = useState('')
   const [step, setStep] = useState<'form' | 'kits' | 'review'>('form')
   const masterItems = useStore(s => s.masterItems).filter(i => !i.deletedAt)
-  const kits = useStore(s => s.kits)
+  const kits = useStore(s => s.kits).filter(k => k.deletedAt == null)
   const addTrip = useStore(s => s.addTrip)
   const navigate = useNavigate()
   const settings = useStore(s => s.settings)

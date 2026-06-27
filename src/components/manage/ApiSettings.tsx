@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
 import { useStore } from '../../store'
 import { loadFromServer } from '../../store/sync'
 import { SYNC_URL } from '../../constants'
 import { toast, toastError } from '../../store/toastStore'
+import { buildConnectLink } from '../../lib/connectLink'
 
 export function ApiSettings() {
   const settings = useStore(s => s.settings)
@@ -10,6 +12,25 @@ export function ApiSettings() {
   const [draft, setDraft] = useState(settings.openRouterApiKey)
   const [syncToken, setSyncToken] = useState(settings.syncToken)
   const [syncing, setSyncing] = useState(false)
+  const [showQR, setShowQR] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const connectLink = settings.syncToken
+    ? buildConnectLink(window.location.origin, settings.syncToken)
+    : null
+
+  // Regenerate QR whenever the token changes or the QR panel is opened
+  const prevLinkRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!showQR || !connectLink) {
+      if (!connectLink) setQrDataUrl(null)
+      return
+    }
+    if (prevLinkRef.current === connectLink && qrDataUrl) return
+    prevLinkRef.current = connectLink
+    QRCode.toDataURL(connectLink, { margin: 2, width: 240 })
+      .then(url => setQrDataUrl(url))
+      .catch(() => setQrDataUrl(null))
+  }, [showQR, connectLink])
 
   async function handleSaveSync() {
     updateSettings({ syncToken })
@@ -30,6 +51,22 @@ export function ApiSettings() {
     } finally {
       setSyncing(false)
     }
+  }
+
+  async function handleCopyLink() {
+    if (!connectLink) return
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(connectLink)
+        toast('Connect link copied')
+        return
+      } catch {
+        // fall through to fallback below
+      }
+    }
+    // Fallback: select the text field so the user can copy manually
+    const el = document.getElementById('connect-link-fallback') as HTMLInputElement | null
+    el?.select()
   }
 
   return (
@@ -53,6 +90,52 @@ export function ApiSettings() {
           {syncing ? 'Connecting...' : 'Save & connect'}
         </button>
         {settings.syncToken && <p className="text-xs text-[#2a6e4e]">Sync active</p>}
+
+        {/* Connect link + QR — only shown when a token is already saved */}
+        {settings.syncToken && connectLink && (
+          <div className="mt-2 space-y-3 border-[1.5px] border-[#ddd] rounded p-4">
+            <p className="font-mono text-[10px] uppercase tracking-[2px] text-[#999]">Connect another device</p>
+            <p className="text-xs text-[#999]">Share this link or QR code to connect a new device without typing the token.</p>
+
+            {/* Clipboard button + fallback text field */}
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleCopyLink}
+                className="w-full px-4 py-2 bg-[#2d2d2d] text-white rounded text-sm text-left"
+              >
+                Copy connect link
+              </button>
+              {/* Shown as a selectable fallback when clipboard API is unavailable */}
+              <input
+                id="connect-link-fallback"
+                type="text"
+                readOnly
+                value={connectLink}
+                className="w-full bg-white border-[1.5px] border-[#ddd] text-[#999] rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-[#2d2d2d] select-all"
+                onClick={e => (e.target as HTMLInputElement).select()}
+                aria-label="Connect link (tap to select)"
+              />
+            </div>
+
+            {/* QR toggle */}
+            <button
+              onClick={() => setShowQR(v => !v)}
+              className="px-4 py-2 border-[1.5px] border-[#ddd] text-[#2d2d2d] rounded text-sm"
+            >
+              {showQR ? 'Hide QR' : 'Show QR'}
+            </button>
+
+            {showQR && (
+              <div className="flex flex-col items-center gap-2 pt-2">
+                {qrDataUrl
+                  ? <img src={qrDataUrl} alt="Connect QR code" width={240} height={240} className="rounded border-[1.5px] border-[#ddd]" />
+                  : <p className="text-xs text-[#999]">Generating QR…</p>
+                }
+                <p className="text-xs text-[#999]">Scan on your other device to connect.</p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </div>
   )

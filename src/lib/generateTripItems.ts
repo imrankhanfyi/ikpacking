@@ -4,6 +4,7 @@ import { computeQty } from './quantities'
 import { v4 as uuid } from 'uuid'
 
 export function generateTripItems(masterItems: MasterItem[], profile: TripProfile): TripItem[] {
+  const now = new Date().toISOString()
   return filterItemsByProfile(masterItems, profile).map(item => ({
     id: uuid(),
     masterItemId: item.id,
@@ -14,5 +15,7 @@ export function generateTripItems(masterItems: MasterItem[], profile: TripProfil
     isLastMinute: item.isLastMinute,
     isEssential: item.isEssential,
     category: item.category,
+    updatedAt: now,
+    deletedAt: null,
   }))
 }

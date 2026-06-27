@@ -5,7 +5,7 @@ import { KitForm } from './KitForm'
 import { toastUndo } from '../../store/toastStore'
 
 export function KitsView() {
-  const kits = useStore(s => s.kits)
+  const kits = useStore(s => s.kits).filter(k => k.deletedAt == null)
   const masterItems = useStore(s => s.masterItems).filter(i => !i.deletedAt)
   const deleteKit = useStore(s => s.deleteKit)
   const addKit = useStore(s => s.addKit)

@@ -35,3 +35,8 @@ export const AI_MODEL = 'anthropic/claude-haiku-4-5'
 // Single, fixed sync server. Hardcoded so the URL can never drift out of sync
 // (an editable field repeatedly reverted to a stale IP and broke saves).
 export const SYNC_URL = 'https://pack.imrankhan.fyi'
+
+// Sync payload schema version. Bumped to 2 for the LWW + tombstone model.
+// The server rejects payloads with a missing/older version (HTTP 426) so a
+// stale old-code tab cannot overwrite migrated data during rollout.
+export const SCHEMA_VERSION = 2

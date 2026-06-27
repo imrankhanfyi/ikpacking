@@ -5,7 +5,8 @@ import { useStore } from '../../store'
 import { toastUndo } from '../../store/toastStore'
 
 export function TripCard({ trip }: { trip: Trip }) {
-  const included = trip.items.filter(i => i.isIncluded)
+  const liveItems = trip.items.filter(i => i.deletedAt == null)
+  const included = liveItems.filter(i => i.isIncluded)
   const packed = included.filter(i => i.isPacked)
   const isComplete = !!trip.completedAt
   const isActive = !isComplete
