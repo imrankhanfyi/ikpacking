@@ -67,6 +67,22 @@ scp -r dist/* root@94.130.96.213:/var/www/pack/
 
 The service worker auto-invalidates the cache on each build (build ID is injected at build time).
 
+### Deploying server (sync) changes
+
+The client deploy above only ships `dist/`. When `server/` changes, deploy the
+sync server too. Deploy **all** server modules together — a partial deploy breaks
+the ESM imports and takes sync down on restart:
+
+```bash
+# From the project root. persist.mjs is imported by server.mjs, so ship both.
+scp server/server.mjs server/persist.mjs root@94.130.96.213:/opt/pack-sync/server/
+ssh root@94.130.96.213 "systemctl restart pack-sync && systemctl status pack-sync --no-pager"
+```
+
+Then smoke-test: an authenticated PUT should return 200 and leave a fresh
+`data.json.bak.*` snapshot beside `/opt/pack-sync/data.json` (rolling backups,
+newest 50 kept; no-op writes are not backed up).
+
 ## Moving to a New Server
 
 ### 1. Back up the data

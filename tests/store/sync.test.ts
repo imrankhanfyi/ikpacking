@@ -201,6 +201,115 @@ describe('saveToServer', () => {
   })
 })
 
+// --- sync failure observability ----------------------------------------------
+describe('sync status reporting', () => {
+  it('saveToServer on a 500 sets status=error, lastError, and toasts once', async () => {
+    const toastErrorSpy = vi.fn()
+    vi.doMock('../../src/store/toastStore', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/store/toastStore')>()
+      return { ...actual, toastError: toastErrorSpy }
+    })
+    const fetchMock = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) } as Response))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { saveToServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [ttrip('t1', '2026-01-01T00:00:00.000Z')])
+
+    const ok = await saveToServer()
+    expect(ok).toBe(false)
+    const st = useSyncStatusStore.getState()
+    expect(st.status).toBe('error')
+    expect(st.lastError).toContain('500')
+    expect(toastErrorSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('saveToServer on a 401 reports an authorization/passphrase message', async () => {
+    const toastErrorSpy = vi.fn()
+    vi.doMock('../../src/store/toastStore', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/store/toastStore')>()
+      return { ...actual, toastError: toastErrorSpy }
+    })
+    const fetchMock = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) } as Response))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { saveToServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [ttrip('t1', '2026-01-01T00:00:00.000Z')])
+
+    await saveToServer()
+    const st = useSyncStatusStore.getState()
+    expect(st.status).toBe('error')
+    expect(st.lastError).toMatch(/authoriz|passphrase/i)
+    expect(toastErrorSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('a successful saveToServer sets status=ok, lastSyncedAt, and does NOT toast', async () => {
+    const toastErrorSpy = vi.fn()
+    vi.doMock('../../src/store/toastStore', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/store/toastStore')>()
+      return { ...actual, toastError: toastErrorSpy }
+    })
+    const { fetchMock } = makeServer({})
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { saveToServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [ttrip('t1', '2026-01-01T00:00:00.000Z')])
+
+    const ok = await saveToServer()
+    expect(ok).toBe(true)
+    const st = useSyncStatusStore.getState()
+    expect(st.status).toBe('ok')
+    expect(st.lastSyncedAt).not.toBeNull()
+    expect(st.lastError).toBeNull()
+    expect(toastErrorSpy).not.toHaveBeenCalled()
+  })
+
+  it('two consecutive failures only toast once (transition discipline)', async () => {
+    const toastErrorSpy = vi.fn()
+    vi.doMock('../../src/store/toastStore', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/store/toastStore')>()
+      return { ...actual, toastError: toastErrorSpy }
+    })
+    const fetchMock = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) } as Response))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { saveToServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [ttrip('t1', '2026-01-01T00:00:00.000Z')])
+
+    await saveToServer()
+    await saveToServer()
+    expect(useSyncStatusStore.getState().status).toBe('error')
+    expect(toastErrorSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('loadFromServer on a 500 also reports an error and toasts', async () => {
+    const toastErrorSpy = vi.fn()
+    vi.doMock('../../src/store/toastStore', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/store/toastStore')>()
+      return { ...actual, toastError: toastErrorSpy }
+    })
+    const fetchMock = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) } as Response))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { loadFromServer } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [])
+
+    const ok = await loadFromServer()
+    expect(ok).toBe(false)
+    expect(useSyncStatusStore.getState().status).toBe('error')
+    expect(toastErrorSpy).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('schema-version gate (426)', () => {
   it('a 426 from the server stops syncing for the session', async () => {
     // Server that returns 426 on GET.

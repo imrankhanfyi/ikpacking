@@ -192,6 +192,20 @@ tombstones), `tests/store/sync.test.ts` (LWW load, ping-pong guard, secret-strip
   debounced save, not a websocket. Sub-second NTP skew is accepted.
 - Record arrays become **id-sorted** after any merge (the UI groups by category,
   so this is cosmetic).
+- **A persistently-failing save is now surfaced but not auto-persisted.** As of
+  2026-07-14 the client reports sync failures (toast + status line in `ApiSettings`,
+  via `src/store/syncStatusStore.ts`) instead of swallowing them. Transient failures
+  (network/500) self-heal on the next foreground pull; *persistent* ones do not — a
+  bad device clock trips the server's far-future guard, which rejects the **whole**
+  payload (400), and the re-pushed payload just re-rejects. The user is now told, but
+  must fix the cause (clock/passphrase). Dropping/clamping the single offending record
+  instead of 400-ing everything is the follow-up if this ever bites.
+- **`isPacked` merges by whole-record LWW with no monotonic carve-out** (unlike
+  `Trip.completedAt`). A genuinely-newer edit on an *unpacked* copy of an item can
+  overwrite a *packed* copy on another device — the only remaining path that can zero
+  a check-off. Not observed in practice (the 2026-07 investigation confirmed the
+  reported loss was pre-rework, never-synced data, not this). Fix if it recurs:
+  make `isPacked` monotonic, accepting that cross-device *un*-checking would then lose.
 
 ---
 
@@ -232,6 +246,11 @@ cause directly — which is why Capacitor is the chosen path over staying a pure
 
 Lower stakes for a single-user, obscure-URL app; revisit after Phase 1 proves out:
 server request body-size cap, `crypto.timingSafeEqual` for the auth compare,
-per-write rolling backups of `data.json`, tombstone GC (~1yr), Caddy `rate_limit`
-+ `Authorization` log exclusion, `@capacitor/preferences` for durable native
-storage.
+tombstone GC (~1yr), Caddy `rate_limit` + `Authorization` log exclusion,
+`@capacitor/preferences` for durable native storage.
+
+**Done since:** per-write rolling backups of `data.json` (2026-07-14) —
+`server/persist.mjs` keeps the newest 50 timestamped `.bak.*` snapshots (best-effort;
+no-op writes skipped so pull-triggered PUTs don't churn the window). Paired with
+client-side sync-failure surfacing (`src/store/syncStatusStore.ts`) so a silent
+never-syncing state can't recur unnoticed.

@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { mergeData } from '../shared/syncMerge.mjs'
+import { persistData } from './persist.mjs'
 
 const DATA_FILE = process.env.PACK_DATA_FILE ||
   path.join(path.dirname(fileURLToPath(import.meta.url)), 'data.json')
@@ -171,10 +172,8 @@ const server = http.createServer((req, res) => {
       const current = readCurrentData()
       const merged = mergeData(current, incoming)
 
-      // 6. Atomic write via temp file + rename
-      const tmp = DATA_FILE + '.tmp'
-      fs.writeFileSync(tmp, JSON.stringify(merged))
-      fs.renameSync(tmp, DATA_FILE)
+      // 6. Atomic write + rolling backup (best-effort)
+      persistData(DATA_FILE, merged)
 
       // 7. Respond with merged doc (client folds it back)
       res.writeHead(200, { 'Content-Type': 'application/json' })

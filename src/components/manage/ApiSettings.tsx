@@ -4,6 +4,7 @@ import { useStore } from '../../store'
 import { loadFromServer } from '../../store/sync'
 import { SYNC_URL } from '../../constants'
 import { toast, toastError } from '../../store/toastStore'
+import { useSyncStatusStore } from '../../store/syncStatusStore'
 import { buildConnectLink } from '../../lib/connectLink'
 
 export function ApiSettings() {
@@ -12,6 +13,9 @@ export function ApiSettings() {
   const [draft, setDraft] = useState(settings.openRouterApiKey)
   const [syncToken, setSyncToken] = useState(settings.syncToken)
   const [syncing, setSyncing] = useState(false)
+  const syncStatus = useSyncStatusStore(s => s.status)
+  const lastSyncedAt = useSyncStatusStore(s => s.lastSyncedAt)
+  const lastError = useSyncStatusStore(s => s.lastError)
   const [showQR, setShowQR] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const connectLink = settings.syncToken
@@ -90,6 +94,12 @@ export function ApiSettings() {
           {syncing ? 'Connecting...' : 'Save & connect'}
         </button>
         {settings.syncToken && <p className="text-xs text-[#2a6e4e]">Sync active</p>}
+        {settings.syncToken && syncStatus === 'ok' && lastSyncedAt && (
+          <p className="text-xs text-[#2a6e4e]">Last synced ✓ {new Date(lastSyncedAt).toLocaleString()}</p>
+        )}
+        {settings.syncToken && syncStatus === 'error' && lastError && (
+          <p className="text-xs text-[#e05a33]">⚠ {lastError}</p>
+        )}
 
         {/* Connect link + QR — only shown when a token is already saved */}
         {settings.syncToken && connectLink && (

@@ -1,6 +1,7 @@
 import { useStore } from './index'
 import { SYNC_URL, SCHEMA_VERSION } from '../constants'
 import { toastError } from './toastStore'
+import { useSyncStatusStore, reportSyncSuccess, reportSyncError } from './syncStatusStore'
 import { mergeData, canonicalJSON } from '../../shared/syncMerge.mjs'
 import type { MasterItem, Kit, Trip } from '../types'
 
@@ -41,6 +42,22 @@ function localData(): SyncData {
   return { masterItems, kits, trips }
 }
 
+// Turn an HTTP status into a human-readable sync-failure message.
+function syncErrorMessage(status: number): string {
+  if (status === 401) return 'Sync failed: not authorized — check your connection passphrase in Manage.'
+  if (status === 400) return 'Sync failed: the server rejected a change (possibly a device clock issue).'
+  return `Sync failed (HTTP ${status}).`
+}
+
+// Record a sync failure. The syncStatusStore is the source of truth for the
+// previous status, so we only toast when TRANSITIONING into error — repeated
+// failures update the status silently instead of spamming toasts.
+function reportFailure(msg: string) {
+  const wasError = useSyncStatusStore.getState().status === 'error'
+  reportSyncError(msg)
+  if (!wasError) toastError(msg)
+}
+
 // Canonical form of a data doc (sorted, deduped) for change detection.
 function canon(d: Partial<SyncData>): string {
   return canonicalJSON(mergeData(d, {}))
@@ -79,7 +96,7 @@ export async function loadFromServer(): Promise<boolean> {
       headers: { 'Authorization': `Bearer ${config.token}` },
     })
     if (res.status === 426) { haltForVersion(); return false }
-    if (!res.ok) return false
+    if (!res.ok) { reportFailure(syncErrorMessage(res.status)); return false }
 
     const server = (await res.json()) as Partial<SyncData>
     const local = localData()
@@ -93,8 +110,10 @@ export async function loadFromServer(): Promise<boolean> {
     if (canonicalJSON(merged) !== canon(server)) {
       await saveToServer()
     }
+    reportSyncSuccess()
     return true
   } catch {
+    reportFailure('Sync failed: could not reach the server (offline?).')
     return false
   }
 }
@@ -116,7 +135,7 @@ export async function saveToServer(): Promise<boolean> {
       body: JSON.stringify({ schemaVersion: SCHEMA_VERSION, masterItems, kits, trips }),
     })
     if (res.status === 426) { haltForVersion(); return false }
-    if (!res.ok) return false
+    if (!res.ok) { reportFailure(syncErrorMessage(res.status)); return false }
 
     // The server returns the merged doc — fold anything new back in, under the
     // guard so this adoption doesn't schedule another save.
@@ -126,8 +145,10 @@ export async function saveToServer(): Promise<boolean> {
     if (canonicalJSON(folded) !== canon(local)) {
       applyRemote(folded)
     }
+    reportSyncSuccess()
     return true
   } catch {
+    reportFailure('Sync failed: could not reach the server (offline?).')
     return false
   }
 }
@@ -179,8 +200,9 @@ export async function startSync() {
 
   if (typeof document !== 'undefined' && !listenersAttached) {
     listenersAttached = true
-    // Flush on background, pull on foreground. Safe now that merge is
-    // non-destructive — a foreground pull can only ADD/RESOLVE, never clobber.
+    // Flush on background, pull on foreground. A foreground pull merges by
+    // last-write-wins; it never blindly overwrites, but a genuinely-newer
+    // remote record can replace a local one (that's correct LWW behavior).
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') flushSave()
       else loadFromServer()
