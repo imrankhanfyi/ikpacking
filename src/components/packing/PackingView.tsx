@@ -7,6 +7,7 @@ import { computeLastMinuteItems } from '../../lib/lastMinute'
 import { learnFromHistory } from '../../ai/learnFromHistory'
 import { useState } from 'react'
 import { CATEGORY_LAYOUT } from '../../constants'
+import { SyncNowButton } from '../common/SyncNowButton'
 
 export function PackingView() {
   const { id } = useParams<{ id: string }>()
@@ -74,9 +75,12 @@ export function PackingView() {
           <h1 className="text-2xl font-extrabold tracking-tight text-[#2d2d2d]">{trip.name}</h1>
           <p className="font-mono text-[11px] uppercase tracking-[1px] text-[#999]">{trip.departureDate} &middot; {trip.profile.duration}d &middot; {trip.profile.weather} &middot; {trip.profile.type}</p>
         </div>
-        {!trip.completedAt && (
-          <button onClick={() => setShowGate(true)} className="px-4 py-2 bg-[#2a6e4e] text-white rounded font-mono text-sm font-bold hover:bg-[#1e5a3d]">Mark complete &#10003;</button>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {!trip.completedAt && (
+            <button onClick={() => setShowGate(true)} className="px-4 py-2 bg-[#2a6e4e] text-white rounded font-mono text-sm font-bold hover:bg-[#1e5a3d]">Mark complete &#10003;</button>
+          )}
+          <SyncNowButton />
+        </div>
       </div>
 
       <div className="flex items-center gap-1 mb-4">

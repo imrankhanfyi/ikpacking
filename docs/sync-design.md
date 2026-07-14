@@ -200,6 +200,11 @@ tombstones), `tests/store/sync.test.ts` (LWW load, ping-pong guard, secret-strip
   payload (400), and the re-pushed payload just re-rejects. The user is now told, but
   must fix the cause (clock/passphrase). Dropping/clamping the single offending record
   instead of 400-ing everything is the follow-up if this ever bites.
+  As of 2026-07-14 the trip screen also has a **"Sync now" verify button**
+  (`src/components/common/SyncNowButton.tsx`, mounted in `PackingView`) — an on-demand
+  reconcile (`syncNow()` in `sync.ts`: cancel pending debounce → `loadFromServer()`) that
+  shows the same ✓/⚠ status inline, for a deliberate pre-trip "is my packing on the server?"
+  check. Saving remains automatic; this is confirmation, not a manual save.
 - **`isPacked` merges by whole-record LWW with no monotonic carve-out** (unlike
   `Trip.completedAt`). A genuinely-newer edit on an *unpacked* copy of an item can
   overwrite a *packed* copy on another device — the only remaining path that can zero

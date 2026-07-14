@@ -310,6 +310,35 @@ describe('sync status reporting', () => {
   })
 })
 
+describe('syncNow', () => {
+  it('cancels the pending debounce and immediately reconciles with the server', async () => {
+    const { fetchMock, puts, getState: serverState } = makeServer({})
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { useStore } = await import('../../src/store/index')
+    const { useSyncStatusStore } = await import('../../src/store/syncStatusStore')
+    const { startSync, syncNow } = await import('../../src/store/sync')
+    setToken(useStore, [], [], [])
+
+    await startSync()
+
+    // Local change: schedules a debounced save (1500ms), not yet fired.
+    useStore.setState({ trips: [ttrip('t1', '2026-06-01T00:00:00.000Z')] })
+
+    expect(await syncNow()).toBe(true)
+    expect(serverState().trips.some((t: any) => t.id === 't1')).toBe(true)
+
+    const st = useSyncStatusStore.getState()
+    expect(st.status).toBe('ok')
+    expect(st.lastSyncedAt).not.toBeNull()
+
+    // The debounce was cancelled by syncNow — advancing past 1500ms fires nothing new.
+    const putsAfterSync = puts.length
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(puts.length).toBe(putsAfterSync)
+  })
+})
+
 describe('schema-version gate (426)', () => {
   it('a 426 from the server stops syncing for the session', async () => {
     // Server that returns 426 on GET.

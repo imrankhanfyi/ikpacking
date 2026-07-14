@@ -153,6 +153,13 @@ export async function saveToServer(): Promise<boolean> {
   }
 }
 
+// On-demand reconcile (e.g. a "Sync now" button): cancels any pending debounced
+// save and immediately loads/merges with the server instead.
+export async function syncNow(): Promise<boolean> {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+  return loadFromServer()
+}
+
 export function debouncedSave() {
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => { saveTimer = null; saveToServer() }, 1500)
