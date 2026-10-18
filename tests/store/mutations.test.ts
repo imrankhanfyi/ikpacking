@@ -215,6 +215,18 @@ describe('soft deletes (tombstones)', () => {
 })
 
 describe('new record fields', () => {
+  it('addMasterItem returns the id of the master item it creates', async () => {
+    const useStore = await freshStore()
+
+    const id = useStore.getState().addMasterItem({
+      name: 'Travel pillow', category: 'Misc', tags: ['always'],
+      defaultQty: 1, qtyBasis: 'fixed', isLastMinute: false, isEssential: false,
+    })
+
+    expect(typeof id).toBe('string')
+    expect(useStore.getState().masterItems.find(i => i.id === id)?.name).toBe('Travel pillow')
+  })
+
   it('addTripItem produces a record with non-empty updatedAt and deletedAt: null', async () => {
     const useStore = await freshStore()
 

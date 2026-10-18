@@ -4,6 +4,8 @@ import type { TripProfile } from '../../types'
 import { useStore } from '../../store'
 import { generateTripItems } from '../../lib/generateTripItems'
 import { parseTripDescription } from '../../ai/parseTrip'
+import { CATEGORIES } from '../../constants'
+import { v4 as uuid } from 'uuid'
 
 const DEFAULT_PROFILE: TripProfile = {
   duration: 5, weather: 'cold', type: 'leisure', mode: 'checked', nlDescription: ''
@@ -17,6 +19,7 @@ export function NewTripForm() {
   const masterItems = useStore(s => s.masterItems).filter(i => !i.deletedAt)
   const kits = useStore(s => s.kits).filter(k => k.deletedAt == null)
   const addTrip = useStore(s => s.addTrip)
+  const addMasterItem = useStore(s => s.addMasterItem)
   const navigate = useNavigate()
   const settings = useStore(s => s.settings)
   const [nlInput, setNlInput] = useState('')
@@ -26,6 +29,51 @@ export function NewTripForm() {
 
   const [generatedItems, setGeneratedItems] = useState(() => generateTripItems(masterItems, DEFAULT_PROFILE))
   const [activeKitIds, setActiveKitIds] = useState<string[]>([])
+  const [addingCategory, setAddingCategory] = useState<string | null>(null)
+  const [newItemName, setNewItemName] = useState('')
+  const [addToMaster, setAddToMaster] = useState(false)
+  const [pendingMasterItemIds, setPendingMasterItemIds] = useState<Set<string>>(() => new Set())
+
+  function closeItemEditor() {
+    setAddingCategory(null)
+    setNewItemName('')
+    setAddToMaster(false)
+  }
+
+  function handleAddCustomItem(category: string) {
+    const itemName = newItemName.trim()
+    if (!itemName) return
+
+    const id = uuid()
+    const now = new Date().toISOString()
+    setGeneratedItems(items => [...items, {
+      id,
+      masterItemId: null,
+      name: itemName,
+      qty: 1,
+      isIncluded: true,
+      isPacked: false,
+      isLastMinute: false,
+      isEssential: false,
+      category,
+      updatedAt: now,
+      deletedAt: null,
+    }])
+    if (addToMaster) {
+      setPendingMasterItemIds(ids => new Set(ids).add(id))
+    }
+    closeItemEditor()
+  }
+
+  function handleRemoveReviewItem(itemId: string) {
+    setGeneratedItems(items => items.map(item => item.id === itemId ? { ...item, isIncluded: false } : item))
+    setPendingMasterItemIds(ids => {
+      if (!ids.has(itemId)) return ids
+      const next = new Set(ids)
+      next.delete(itemId)
+      return next
+    })
+  }
 
   async function handleNlSubmit() {
     if (!nlInput.trim() || !settings.openRouterApiKey) return
@@ -37,6 +85,8 @@ export function NewTripForm() {
       setProfile({ duration: parsed.duration, weather: parsed.weather, type: parsed.type, mode: parsed.mode, nlDescription: nlInput })
       setName(parsed.name)
       setGeneratedItems(items)
+      setPendingMasterItemIds(new Set())
+      closeItemEditor()
       setStep('kits')
     } catch (e: unknown) {
       setAiError(e instanceof Error ? e.message : 'AI parsing failed. Fill in manually below.')
@@ -54,11 +104,26 @@ export function NewTripForm() {
     setErrors({})
     const items = generateTripItems(masterItems, profile)
     setGeneratedItems(items)
+    setPendingMasterItemIds(new Set())
+    closeItemEditor()
     setStep('kits')
   }
 
   function handleSave() {
-    const id = addTrip({ name: name || `Trip ${departureDate}`, departureDate, profile, activeKitIds, items: generatedItems, completedAt: null })
+    const items = generatedItems.map(item => {
+      if (!item.isIncluded || !pendingMasterItemIds.has(item.id)) return item
+      const masterItemId = addMasterItem({
+        name: item.name,
+        category: item.category,
+        tags: ['always'],
+        defaultQty: 1,
+        qtyBasis: 'fixed',
+        isLastMinute: false,
+        isEssential: false,
+      })
+      return { ...item, masterItemId }
+    })
+    const id = addTrip({ name: name || `Trip ${departureDate}`, departureDate, profile, activeKitIds, items, completedAt: null })
     navigate(`/trip/${id}`)
   }
 
@@ -99,7 +164,9 @@ export function NewTripForm() {
     return (
       <div className="max-w-2xl mx-auto p-6 space-y-6">
         <h2 className="text-xl font-bold text-[#2d2d2d]">Review your list</h2>
-        {Object.entries(byCategory).map(([cat, items]) => (
+        {CATEGORIES.map(cat => {
+          const items = byCategory[cat] ?? []
+          return (
           <section key={cat}>
             <h3 className="font-mono text-[10px] uppercase tracking-[3px] text-[#999] border-b-[1.5px] border-[#2d2d2d] pb-1 mb-2">{cat}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
@@ -110,13 +177,49 @@ export function NewTripForm() {
                     <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-[#f5f3ef] text-[#999] hover:text-[#2d2d2d] text-sm">−</button>
                     <span className="text-xs text-[#2d2d2d] font-mono w-6 text-center">{item.qty}</span>
                     <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i))} className="w-7 h-7 flex items-center justify-center rounded bg-[#f5f3ef] text-[#999] hover:text-[#2d2d2d] text-sm">+</button>
-                    <button onClick={() => setGeneratedItems(prev => prev.map(i => i.id === item.id ? { ...i, isIncluded: false } : i))} className="ml-1 bg-[#fef8f5] text-[#e05a33] border-[1px] border-[#e05a33] rounded text-xs px-2 py-1 hover:bg-[#e05a33] hover:text-white">Remove</button>
+                    <button onClick={() => handleRemoveReviewItem(item.id)} className="ml-1 bg-[#fef8f5] text-[#e05a33] border-[1px] border-[#e05a33] rounded text-xs px-2 py-1 hover:bg-[#e05a33] hover:text-white">Remove</button>
                   </div>
                 </div>
               ))}
             </div>
+            {addingCategory === cat ? (
+              <form
+                onSubmit={event => { event.preventDefault(); handleAddCustomItem(cat) }}
+                className="mt-2 rounded bg-[#faf9f7] border border-[#eee] p-2 space-y-2"
+              >
+                <div className="flex gap-2">
+                  <input
+                    value={newItemName}
+                    onChange={event => setNewItemName(event.target.value)}
+                    onKeyDown={event => { if (event.key === 'Escape') closeItemEditor() }}
+                    aria-label={`New ${cat} item`}
+                    placeholder="Item name..."
+                    autoFocus
+                    className="flex-1 min-w-0 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-sm text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]"
+                  />
+                  <button
+                    type="submit"
+                    aria-label={`Add ${cat} item`}
+                    disabled={!newItemName.trim()}
+                    className="px-3 py-2 bg-[#2d2d2d] text-white rounded text-sm disabled:opacity-50"
+                  >Add</button>
+                  <button type="button" onClick={closeItemEditor} className="px-3 py-2 bg-[#f5f3ef] text-[#999] rounded text-sm">Cancel</button>
+                </div>
+                <label className="flex items-center gap-2 text-xs text-[#666] cursor-pointer w-fit">
+                  <input type="checkbox" checked={addToMaster} onChange={event => setAddToMaster(event.target.checked)} />
+                  Also add to master list
+                </label>
+              </form>
+            ) : (
+              <button
+                onClick={() => { closeItemEditor(); setAddingCategory(cat) }}
+                aria-label={`Add item to ${cat}`}
+                className="mt-2 text-[#e05a33] font-mono text-[10px] uppercase tracking-[2px] hover:opacity-70"
+              >+ Add item</button>
+            )}
           </section>
-        ))}
+          )
+        })}
         <div className="flex gap-2 pt-2">
           <button onClick={() => setStep('kits')} className="flex-1 py-2 rounded border-[1.5px] border-[#ddd] text-[#999]">← Back</button>
           <button onClick={handleSave} className="flex-1 py-2 rounded bg-[#2d2d2d] text-white font-bold">Save trip →</button>

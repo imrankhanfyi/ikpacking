@@ -85,7 +85,7 @@ interface AppStore {
   pendingSuggestions: PatternSuggestion[]
 
   // Master item actions
-  addMasterItem: (item: Omit<MasterItem, 'id' | 'updatedAt' | 'deletedAt'>) => void
+  addMasterItem: (item: Omit<MasterItem, 'id' | 'updatedAt' | 'deletedAt'>) => string
   updateMasterItem: (id: string, updates: Partial<MasterItem>) => void
   deleteMasterItem: (id: string) => void
   restoreMasterItem: (id: string) => void
@@ -141,10 +141,12 @@ export const useStore = create<AppStore>()(
       pendingSuggestions: [],
 
       addMasterItem: (item) => {
+        const id = uuid()
         const now = new Date().toISOString()
         set(s => ({
-          masterItems: [...s.masterItems, { ...item, id: uuid(), updatedAt: now, deletedAt: null }]
+          masterItems: [...s.masterItems, { ...item, id, updatedAt: now, deletedAt: null }]
         }))
+        return id
       },
 
       updateMasterItem: (id, updates) => {
