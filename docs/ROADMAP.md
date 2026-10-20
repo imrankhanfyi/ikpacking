@@ -7,6 +7,30 @@ were previously spread across design documents. Items are directional rather
 than scheduled commitments; sequencing and timelines will be decided when each
 item is taken up.
 
+## Server-Side AI Key
+
+**Status:** Proposed — priority (next up)
+
+Move the OpenRouter call from the browser/phone onto the sync server, so the
+API key lives on the server once and no device ever needs it pasted in
+(including fresh iPhone installs).
+
+- Add an authenticated AI endpoint to `server/server.mjs` (same sync-token
+  check), holding the OpenRouter key server-side; keep the existing typed
+  errors, retry and dedup from `src/ai/client.ts`.
+- Point the four AI features (`parseTrip`, `learnFromHistory`,
+  `importNotion`, via `src/ai/client.ts`) at it; remove the per-device key
+  field from `ApiSettings` once it works.
+- Cap request size and rate on the endpoint (it spends money).
+
+Considered and parked (2026-10-20): running AI through the user's ChatGPT
+subscription via `codex exec` on the server, to avoid paying for credits.
+Concerns: likely much slower per request (a full agent per call), unclear
+whether OpenAI's terms allow a ChatGPT-plan Codex as an app backend, and new
+exposure from an agent reachable over the internet. Haiku via OpenRouter is
+cheap, so not worth it now. If revisited, first time ~5 trip-parse runs
+locally and build only if all return valid JSON and the median is under 10s.
+
 ## Smarter Trip Reuse
 
 **Status:** Proposed
