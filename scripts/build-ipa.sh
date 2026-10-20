@@ -16,7 +16,7 @@ EXTRA=()
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
-xcodebuild archive \
+xcodebuild archive -quiet \
   -project ios/App/App.xcodeproj \
   -scheme App \
   -destination 'generic/platform=iOS' \
