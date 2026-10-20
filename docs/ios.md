@@ -5,7 +5,7 @@ Pack's iPhone app is the same app as the website. It's installed outside the App
 them through the same server.
 
 Updates arrive inside AltStore: when a new version is published, AltStore shows an **Update**
-button for Pack.
+button for Pack. Tap it to install; AltStore doesn't install updates on its own.
 
 > Steps marked **(you)** need your hands or your Apple ID. Everything else is already done.
 

@@ -9,8 +9,9 @@ After any change that affects the app (src/, public/, index.html, capacitor.conf
 3. `./deploy.sh`. It deploys the web app AND publishes a new iPhone build to the AltStore
    source. If the auto-mode classifier blocks it, ask Imran to run `! ./deploy.sh`; don't work
    around it.
-4. Confirm `curl -s https://pack.imrankhan.fyi/ios/source.json` shows the new version, and tell
-   Imran to open AltStore → My Apps → Update if the app hasn't updated itself.
+4. Confirm `curl -s https://pack.imrankhan.fyi/ios/source.json` shows the new version, then tell
+   Imran to tap **Update** on Pack in AltStore. AltStore never installs updates by itself
+   (observed 2026-10-20).
 Data needs no release: it syncs through the server. Docs-only changes: `SKIP_IOS=1 ./deploy.sh`
 or skip the deploy entirely.
 Retire this rule if deploys move to CI.
