@@ -1,3 +1,5 @@
+import { SYNC_URL } from '../constants'
+
 export class ApiError extends Error {
   kind: 'offline' | 'timeout' | 'auth' | 'rate-limit' | 'server' | 'parse'
   status?: number
@@ -40,7 +42,7 @@ export async function openRouterChat(
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://pack.app',
+        'HTTP-Referer': SYNC_URL,
       },
       body: JSON.stringify({ model, messages, temperature: 0.2 }),
       signal: controller.signal,

@@ -5,6 +5,7 @@ import { loadFromServer } from '../../store/sync'
 import { SYNC_URL } from '../../constants'
 import { toast, toastError } from '../../store/toastStore'
 import { useSyncStatusStore } from '../../store/syncStatusStore'
+import { isNative } from '../../lib/platform'
 import { buildConnectLink } from '../../lib/connectLink'
 
 export function ApiSettings() {
@@ -19,7 +20,7 @@ export function ApiSettings() {
   const [showQR, setShowQR] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const connectLink = settings.syncToken
-    ? buildConnectLink(window.location.origin, settings.syncToken)
+    ? buildConnectLink(isNative() ? SYNC_URL : window.location.origin, settings.syncToken)
     : null
 
   // Regenerate QR whenever the token changes or the QR panel is opened

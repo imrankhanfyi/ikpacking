@@ -87,7 +87,7 @@ export function TripCard({ trip }: { trip: Trip }) {
         </div>
       </div>
       {isActive && (
-        <div className="flex items-center gap-1 mt-2">
+        <div className="flex flex-wrap items-center gap-1 mt-2">
           {Array.from({ length: included.length }, (_, i) => (
             <span key={i} className={`w-3 h-3 border-[1.5px] rounded-[2px] ${i < packed.length ? 'border-[#2d2d2d] bg-[#e05a33]' : 'border-[#ddd]'}`} />
           ))}

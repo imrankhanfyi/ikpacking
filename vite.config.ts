@@ -3,7 +3,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  ...(mode === 'ios' ? { base: './', build: { outDir: 'dist-ios' } } : {}),
   define: {
     __BUILD_ID__: JSON.stringify(Date.now().toString(36)),
   },
@@ -13,4 +14,4 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     globals: true,
   },
-})
+}))

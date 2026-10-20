@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useStore } from './store'
 import { Onboarding } from './components/Onboarding'
 import { TripList } from './components/trips/TripList'
@@ -8,6 +8,14 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { loadFromServer } from './store/sync'
 import { toast, toastError } from './store/toastStore'
 import { parseTokenFromHash } from './lib/connectLink'
+import { isNative } from './lib/platform'
+
+// New screen starts at the top (otherwise it inherits the previous screen's scroll).
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 // Lazy-loaded routes
 const NewTripForm = lazy(() => import('./components/trips/NewTripForm').then(m => ({ default: m.NewTripForm })))
@@ -35,6 +43,7 @@ export default function App() {
   useEffect(() => {
     if (tokenHandled) return
     if (typeof window === 'undefined') return
+    if (isNative()) return // hash routing in the native shell; no #token= links
 
     const token = parseTokenFromHash(window.location.hash)
     if (!token) return
@@ -64,13 +73,16 @@ export default function App() {
 
   useEffect(() => { mergeMissingSeeds() }, [])
 
+  const Router = isNative() ? HashRouter : BrowserRouter
+
   if (!hasOnboarded) return <Onboarding />
 
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <div className="min-h-screen bg-[#fefefe] text-[#2d2d2d]">
-          <Suspense fallback={<div className="min-h-screen bg-[#fefefe] flex items-center justify-center"><p className="text-[#999] text-sm">Loading...</p></div>}>
+      <Router>
+        <ScrollToTop />
+        <div className="min-h-safe bg-[#fefefe] text-[#2d2d2d]">
+          <Suspense fallback={<div className="min-h-safe bg-[#fefefe] flex items-center justify-center"><p className="text-[#999] text-sm">Loading...</p></div>}>
             <Routes>
               <Route path="/" element={<TripList />} />
               <Route path="/trip/new" element={<NewTripForm />} />
@@ -89,7 +101,7 @@ export default function App() {
           </Suspense>
         </div>
         <ToastContainer />
-      </BrowserRouter>
+      </Router>
     </ErrorBoundary>
   )
 }

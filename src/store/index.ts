@@ -1,11 +1,13 @@
 // src/store/index.ts
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { MasterItem, Kit, Trip, TripItem, AppSettings, PatternSuggestion } from '../types'
 import { seedItems, buildSeedKits } from './seed'
 import { mergeRecords } from '../../shared/syncMerge.mjs'
 import { seedItemId, seedKitId, SEED_EPOCH, SEED_ITEM_NAMES, SEED_KIT_NAMES } from '../../shared/seedIds.mjs'
 import { v4 as uuid } from 'uuid'
+import { isNative } from '../lib/platform'
+import { preferencesStorage } from './preferencesStorage'
 
 // Persist migration v1 -> v2: the LWW + tombstone rollout.
 // v1 stored seeds with random uuid ids (a storage wipe reseeded with NEW ids and
@@ -370,6 +372,7 @@ export const useStore = create<AppStore>()(
     }),
     {
       name: 'packing-app-store',
+      storage: createJSONStorage(() => (isNative() ? preferencesStorage : localStorage)),
       version: 2,
       migrate: (persisted: any, version: number) =>
         version >= 2 ? persisted : migrateV1toV2(persisted),

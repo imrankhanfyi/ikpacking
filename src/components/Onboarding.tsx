@@ -32,7 +32,7 @@ export function Onboarding() {
 
   if (step === 'sync') {
     return (
-      <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
+      <div className="min-h-safe bg-[#fefefe] flex items-center justify-center p-6">
         <div className="max-w-md w-full space-y-6">
           <h1 className="text-2xl font-bold text-[#2d2d2d]">Restore from sync</h1>
           <p className="text-[#999]">Used this app before? Enter your sync token to restore your data and settings.</p>
@@ -53,7 +53,7 @@ export function Onboarding() {
 
   if (step === 'api') {
     return (
-      <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
+      <div className="min-h-safe bg-[#fefefe] flex items-center justify-center p-6">
         <div className="max-w-md w-full space-y-6">
           <h1 className="text-2xl font-bold text-[#2d2d2d]">Add your OpenRouter key</h1>
           <p className="text-[#999]">Used for AI trip generation. Optional — you can always add it later in Settings.</p>
@@ -68,7 +68,7 @@ export function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
+    <div className="min-h-safe bg-[#fefefe] flex items-center justify-center p-6">
       <div className="max-w-md w-full space-y-6 text-center">
         <h1 className="text-3xl font-bold text-[#2d2d2d]">pack</h1>
         <p className="text-[#999]">A smarter packing list. One master list, reusable kits, AI-powered trip generation.</p>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { TripProfile } from '../../types'
 import { useStore } from '../../store'
 import { generateTripItems } from '../../lib/generateTripItems'
@@ -231,7 +231,10 @@ export function NewTripForm() {
   // step === 'form'
   return (
     <div className="max-w-lg mx-auto p-6 space-y-4">
-      <h2 className="text-xl font-bold text-[#2d2d2d]">New trip</h2>
+      <div className="flex items-center gap-4">
+        <Link to="/" className="text-[#e05a33] font-mono text-[11px] uppercase tracking-[2px]">← Trips</Link>
+        <h2 className="text-xl font-bold text-[#2d2d2d]">New trip</h2>
+      </div>
 
       {settings.openRouterApiKey && (
         <div>
@@ -264,7 +267,7 @@ export function NewTripForm() {
 
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[3px] text-[#999]">Departure date</label>
-        <input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} className="w-full mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
+        <input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} className="block w-full min-w-0 appearance-none mt-1 bg-white border-[1.5px] border-[#ddd] rounded px-3 py-2 text-[#2d2d2d] focus:outline-none focus:border-[#2d2d2d]" />
         {errors.date && <p className="text-xs text-[#e05a33] mt-1">{errors.date}</p>}
       </div>
 

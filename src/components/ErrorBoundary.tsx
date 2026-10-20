@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#fefefe] flex items-center justify-center p-6">
+        <div className="min-h-safe bg-[#fefefe] flex items-center justify-center p-6">
           <div className="max-w-sm text-center space-y-4">
             <h1 className="text-xl font-bold text-[#2d2d2d]">Something went wrong</h1>
             <p className="text-sm text-[#999]">The app hit an unexpected error.</p>
