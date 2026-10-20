@@ -229,17 +229,30 @@ The token is an opaque bearer string; "easier to input" is delivered two ways:
 
 ---
 
-## 10. Phase 2 — iPhone app via Capacitor (designed, NOT built)
+## 10. Phase 2 — iPhone app via Capacitor (built 2026-10-20)
 
-Reuses 100% of the React UI. Required changes when we build it:
-- `BrowserRouter` → `HashRouter`; Vite `base: './'`.
-- Register the service worker only on an `https:` origin (not `capacitor://`).
-- Fix the OpenRouter `HTTP-Referer` (currently `window.location.origin`, which is
-  `capacitor://` in the wrapper).
-- If persistence moves to async `@capacitor/preferences`, gate `startSync()` on
-  hydration (boot race).
-- `@capacitor/core` + CLI → `cap init` / `add ios` / `sync` → Xcode → TestFlight
-  (needs an Apple Developer account).
+Reuses the React UI from one codebase. Capacitor 8 (SPM, no CocoaPods), appId
+`fyi.imrankhan.pack`, sideloaded via AltStore Classic (free Apple ID; SideStore
+fallback) — no TestFlight, so no Apple Developer account. See `docs/ios.md`.
+
+Implemented (vs. the original plan):
+- Two builds: `npm run build` (web, unchanged) and `npm run build:ios`
+  (`vite --mode ios`: relative base, outputs `dist-ios/`, then `cap sync`).
+- Native-only behaviour gated by `isNative()` in `src/lib/platform.ts`:
+  `HashRouter` instead of `BrowserRouter`; zustand persist on
+  `@capacitor/preferences` (`src/store/preferencesStorage.ts`, UserDefaults);
+  render and `startSync()` wait for hydration (`whenHydrated` in
+  `src/store/startup.ts`) — closes the boot race; viewport locked (no zoom) to
+  stop iOS auto-zooming into inputs; the `#token=` connect link is web-only.
+- Service worker registers only on `https:`. OpenRouter `HTTP-Referer` is now
+  `SYNC_URL`; on native the connect link also uses `SYNC_URL`.
+
+Differences from the plan: `HashRouter` is chosen at runtime, not globally, and
+`base: './'` applies only in the ios mode — a global relative base breaks web
+deep links. Distribution is AltStore sideloading, not TestFlight.
+
+Verified 2026-10-20: macOS AltServer 1.7.3 installed AltStore and Pack (from the
+self-hosted source) on iOS 26.6.2; sync and the app work on the device.
 
 **Rationale:** the deepest root cause of the duplication bug was Safari evicting
 localStorage. Native durable storage that the OS won't evict attacks that root
@@ -252,7 +265,7 @@ cause directly — which is why Capacitor is the chosen path over staying a pure
 Lower stakes for a single-user, obscure-URL app; revisit after Phase 1 proves out:
 server request body-size cap, `crypto.timingSafeEqual` for the auth compare,
 tombstone GC (~1yr), Caddy `rate_limit` + `Authorization` log exclusion,
-`@capacitor/preferences` for durable native storage.
+`@capacitor/preferences` for durable native storage (**done** 2026-10-20, see §10).
 
 **Done since:** per-write rolling backups of `data.json` (2026-07-14) —
 `server/persist.mjs` keeps the newest 50 timestamped `.bak.*` snapshots (best-effort;

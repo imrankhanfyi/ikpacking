@@ -1,6 +1,6 @@
 # Product Roadmap
 
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-20
 
 This is the living roadmap for Pack. It collects future-development ideas that
 were previously spread across design documents. Items are directional rather
@@ -24,7 +24,7 @@ Source: [Packing app design](superpowers/specs/2026-03-17-packing-app-design.md#
 
 ## Native iPhone App
 
-**Status:** Designed, not built
+**Status:** Shipped 2026-10-20 (installed on iPhone via AltStore, iOS 26.6.2)
 
 Package the existing React app as a native iPhone app using Capacitor, reusing
 the current interface while improving storage durability.
@@ -33,11 +33,14 @@ the current interface while improving storage durability.
 - Move persistence to native durable storage so iOS cannot evict the packing
   data like browser local storage.
 - Adapt service-worker and OpenRouter behavior for the native URL scheme.
-- Add the iOS project, validate it in Xcode, and prepare a TestFlight build.
+- Distribute by sideloading via AltStore Classic, with SideStore as the
+  fallback. No Apple Developer account is needed (free Apple ID).
 
-This work will require an Apple Developer account before TestFlight delivery.
+Confirmed 2026-10-20: macOS AltServer 1.7.3 installs and runs Pack on iOS
+26.6.2. SideStore stays the documented fallback.
 
-Source: [Sync design, Phase 2](sync-design.md#10-phase-2--iphone-app-via-capacitor-designed-not-built)
+Details: [iOS app](ios.md).
+Source: [Sync design, Phase 2](sync-design.md#10-phase-2--iphone-app-via-capacitor-built-2026-10-20)
 
 ## Sync and Security Hardening
 
@@ -50,7 +53,7 @@ more production use.
 - Use timing-safe authentication comparisons.
 - Add tombstone garbage collection with a suitable retention period.
 - Add rate limiting and exclude authorization data from proxy logs.
-- Use Capacitor Preferences if native durable storage is introduced.
+- ~~Use Capacitor Preferences if native durable storage is introduced.~~ Done (2026-10-20, iOS app).
 
 Source: [Sync design, deferred hardening](sync-design.md#11-deferred-hardening-recorded-so-it-isnt-lost)
 

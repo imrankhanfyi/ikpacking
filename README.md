@@ -9,6 +9,9 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # production build → dist/
 npm test             # vitest
+npm run build:ios    # iPhone build → dist-ios/, then cap sync
+npm run test:ios     # XCUITest on a tokenless simulator
+scripts/release-ios.sh  # stage IPA + AltStore source in build/ios/release/
 ./deploy.sh          # build + deploy to server (checks for uncommitted changes)
 ```
 
@@ -27,6 +30,8 @@ React 19, TypeScript 5.9, Vite 8, Zustand (state + persistence), Tailwind CSS v4
 **AI features** — describe a trip in plain English and AI parses it into a structured profile; AI learns from completed trips and suggests master list changes; import from Notion exports with AI categorisation.
 
 **Sync** — data syncs to a server (Hetzner) via a tiny Node.js API. All devices share one source of truth. Falls back to localStorage if sync isn't configured.
+
+**iPhone app** — the same codebase is wrapped with Capacitor and sideloaded via AltStore; see `docs/ios.md`.
 
 ## Deployment
 
@@ -47,6 +52,8 @@ Hosted on Hetzner (94.130.96.213). Caddy serves static files and proxies `/api/*
 ## Project Structure
 
 ```
+capacitor.config.ts      — Capacitor config (appId fyi.imrankhan.pack)
+ios/                    — native iOS project (Capacitor, SPM)
 src/
   constants.ts          — shared constants (categories, tags, AI model)
   types/index.ts        — all TypeScript types
@@ -58,12 +65,14 @@ src/
   ai/parseTrip.ts       — NL trip description → structured profile
   ai/learnFromHistory.ts — completed trips → pattern suggestions
   ai/importNotion.ts    — Notion markdown → master items
+  lib/platform.ts       — isNative() gate for native-only behaviour
   lib/                  — pure logic (item filtering, kit application, quantities)
   components/           — React components (trips, packing, manage, common)
 ```
 
 ## Docs
 
+- `docs/ios.md` — iPhone app: build, sideload via AltStore/SideStore, UI tests
 - `docs/operations.md` — how to deploy, sync, migrate servers, rotate tokens
 - `docs/superpowers/specs/` — design specs (architecture baseline, Plan B, Plan C)
 - `docs/superpowers/plans/` — implementation plans

@@ -253,6 +253,25 @@ ssh root@94.130.96.213 "sed -i 's/PACK_SYNC_TOKEN=.*/PACK_SYNC_TOKEN=$NEW_TOKEN/
 
 Then update the token on each device in Manage > API key.
 
+## iOS app release
+
+Sideloaded via AltStore (SideStore fallback); details in `docs/ios.md`. From the project root:
+
+```bash
+# Build + stage (ALLOW_DIRTY=1 for uncommitted work). Version is 1.0.<yymmddHHMM>
+scripts/release-ios.sh       # -> build/ios/release/: Pack-<version>.ipa, icon.png, source.json
+
+# Upload (manual; deploy.sh does not touch /var/www/pack/ios/)
+ssh root@94.130.96.213 'mkdir -p /var/www/pack/ios' && scp build/ios/release/* root@94.130.96.213:/var/www/pack/ios/
+
+# Verify
+curl -I https://pack.imrankhan.fyi/ios/source.json
+```
+
+`scripts/build-ipa.sh [version] [build]` builds just the unsigned IPA (`build/ios/Pack.ipa`).
+
+UI tests: `npm run test:ios` runs XCUITest on a tokenless "Pack UITest" simulator (never syncs to prod); screenshots land in `build/ios/uitest-screenshots/`.
+
 ## HTTPS Configuration
 
 HTTPS is already configured via Let's Encrypt (Caddy auto-provisions).
