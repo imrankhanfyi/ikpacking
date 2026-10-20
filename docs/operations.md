@@ -255,13 +255,17 @@ Then update the token on each device in Manage > API key.
 
 ## iOS app release
 
-Sideloaded via AltStore (SideStore fallback); details in `docs/ios.md`. From the project root:
+Sideloaded via AltStore (SideStore fallback); details in `docs/ios.md`.
+
+**`./deploy.sh` publishes the iPhone build too.** After the web deploy it runs
+`scripts/release-ios.sh` and uploads `build/ios/release/*` to `/var/www/pack/ios/`. Use
+`SKIP_IOS=1 ./deploy.sh` for a web-only deploy. The pieces, if you need them separately:
 
 ```bash
 # Build + stage (ALLOW_DIRTY=1 for uncommitted work). Version is 1.0.<yymmddHHMM>
 scripts/release-ios.sh       # -> build/ios/release/: Pack-<version>.ipa, icon.png, source.json
 
-# Upload (manual; deploy.sh does not touch /var/www/pack/ios/)
+# Upload
 ssh root@94.130.96.213 'mkdir -p /var/www/pack/ios' && scp build/ios/release/* root@94.130.96.213:/var/www/pack/ios/
 
 # Verify

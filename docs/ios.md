@@ -9,10 +9,11 @@ button for Pack.
 
 > Steps marked **(you)** need your hands or your Apple ID. Everything else is already done.
 
-## 0. Publish the app (one command, each release)
+## 0. Publishing updates (automatic with each deploy)
 
-The app is built with `scripts/release-ios.sh`, which stages the files in
-`build/ios/release/`. Upload them to the server with:
+`./deploy.sh` deploys the website **and** publishes a new iPhone build to the source.
+Run it after any app change (`SKIP_IOS=1 ./deploy.sh` for website-only). To publish by hand:
+run `scripts/release-ios.sh` (stages `build/ios/release/`), then:
 
 ```bash
 ssh root@94.130.96.213 'mkdir -p /var/www/pack/ios' && scp build/ios/release/* root@94.130.96.213:/var/www/pack/ios/
