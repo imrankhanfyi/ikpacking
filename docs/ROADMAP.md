@@ -1,6 +1,6 @@
 # Product Roadmap
 
-**Last updated:** 2026-10-20
+**Last updated:** 2026-10-26
 
 This is the living roadmap for Pack. It collects future-development ideas that
 were previously spread across design documents. Items are directional rather
@@ -66,9 +66,68 @@ Confirmed 2026-10-20: macOS AltServer 1.7.3 installs and runs Pack on iOS
 Details: [iOS app](ios.md).
 Source: [Sync design, Phase 2](sync-design.md#10-phase-2--iphone-app-via-capacitor-built-2026-10-20)
 
+## Public App Store Release
+
+**Status:** Exploring (discussed 2026-10-26; nothing built)
+
+Release Pack free on the App Store, aiming for a few hundred users. The main
+goal is to use it as a test case for future app projects, so the reusable parts
+matter as much as Pack itself: the developer account, the upload pipeline, the
+sign-in pattern, and a privacy and App Review checklist.
+
+**Why it's a real project:** the server is built for one person. It checks a
+single shared token (`PACK_SYNC_TOKEN`) and keeps everyone's data in one
+`data.json`, so anyone who connects shares the same trips. The AI key is also
+pasted into each device.
+
+**Rough order:**
+
+1. **Enrol in the Apple Developer Program** ($99/yr; Imran does this).
+2. **Probe App Review before building accounts.** Submit the current app with
+   few changes. Decision rule, agreed in advance: if it's approved, or rejected
+   only for missing account or privacy items, continue with this plan. If it's
+   rejected as a website in a wrapper with too little native function
+   (guideline 4.2), stop and rethink. Try adding native features before
+   considering a rewrite.
+3. **Accounts and per-user data.** Recommended: Sign in with Apple only (no
+   passwords, no email service, and it can be reused on future projects). The
+   simpler fallback is an anonymous token per install, with the existing QR
+   connect link for a second device, but anyone who loses their token loses
+   their data. Either way, include account deletion inside the app (an App Store
+   requirement), and move Imran's existing data into his account carefully. That
+   step can't be undone on production, so take backups first.
+4. **Server-side AI key with a cap per user.** See "Server-Side AI Key" above. For public
+   users it needs per-user limits so a few heavy users can't run up the
+   OpenRouter bill. Check current pricing before setting the cap.
+5. **Required security hardening.** See "Sync and Security Hardening" below.
+   It's optional for one user and required for strangers.
+6. **Store listing:** app name (plain "Pack" is probably taken; names must be
+   unique), privacy policy, privacy labels, screenshots, age rating, and a
+   support URL.
+7. **Upload pipeline:** build, sign and upload to App Store Connect from
+   `deploy.sh`.
+
+**Estimate:** roughly 3–5 working sessions of code. On the calendar, expect
+about 1–2 weeks, mostly waiting on Apple (enrolment, plus one or more review
+rounds) and on Imran's decisions. These are estimates, not measured.
+
+**Not first: a Swift/SwiftUI rewrite.** The Capacitor app already stores data
+natively on the phone, and one codebase serves both the website and the iPhone.
+A rewrite would split that in two, and the sync merge logic in
+`shared/syncMerge.mjs` would have to be reproduced exactly in Swift. The app is
+small (about 3,200 lines across 50 TypeScript files in `src/`, not counting
+`*.test.*`), so a rewrite is doable if needed. Reconsider only if App Review
+rejects the wrapper, or if future projects will be native Swift apps (open
+question).
+
+**Smaller alternative:** if the only goal were to stop AltStore's 7-day
+re-signing, TestFlight with the same Developer account would do it with no app
+changes. Builds last 90 days.
+
 ## Sync and Security Hardening
 
-**Status:** Deferred hardening
+**Status:** Deferred hardening (becomes required before a public App Store
+release; see above)
 
 Strengthen the existing sync service after its current architecture has had
 more production use.
